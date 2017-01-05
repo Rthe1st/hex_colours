@@ -1,0 +1,39 @@
+{
+  "name": "hex-colur-game",
+  "description": "hex colur game",
+  "version": "0.0.0",
+  "private": true,
+  "author": "Richard Sommerville",
+  "homepage": "",
+  "contributors": [
+    "Richard Sommerville",
+    "Andrew Fagan"
+  ],
+  "main": "server/server/startUp.js",
+  "bugs": {
+    "url": ""
+  },
+  "dependencies": {
+    "dat-gui": "^0.5.0",
+    "express": "4.10.0",
+    "phaser": "^2.6.2"
+  },
+  "devDependencies": {
+    "babelify": "^6.1.0",
+    "browserify": "^10.2.0",
+    "del": "^1.1.0",
+    "gulp": "^3.9.1",
+    "gulp-babel": "^6.0.0",
+    "gulp-util": "^3.0.0",
+    "vinyl-source-stream": "^1.0.0",
+    "watchify": "^3.8.0"
+  },
+  "keywords": [],
+  "repository": "",
+  "licenses": [
+    {}
+  ],
+  "scripts": {
+    "prepublish": "gulp"
+  }
+}
