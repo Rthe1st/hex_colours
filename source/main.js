@@ -29,7 +29,7 @@ let teams = [
 ];
 
 function build_hexagon_polygon(sideLength){
-    let graphicSideLength = sideLength*0.6;
+    let graphicSideLength = sideLength;
     let corner_vertical = Math.sin(Math.PI/3)*graphicSideLength;
     let corner_horizontal = Math.cos(Math.PI/3)*graphicSideLength;
     let polygon = new Phaser.Polygon(
@@ -47,9 +47,9 @@ function asign_sides(){
     let sides = [];
     for(let sideNumber = 0; sideNumber < 6; sideNumber++){
         //for non-random sides
-        //sides.push(sideNumber%teams.length);
+        sides.push(sideNumber%teams.length);
         //for random sides
-        sides.push(Math.floor(Math.random()*teams.length));
+        //sides.push(Math.floor(Math.random()*teams.length));
     }
     return sides;
 }
@@ -107,14 +107,14 @@ function getSideObjects(x, y, sideLength){
     return sideObjects;
 }
 
-function drawLines(game, hexagons){
+function drawLines(game, hexagons, spaceFactor){
     let lineGraphics = [];
     for(let x = 0; x < hexagons.length; x++){
         for(let y = 0; y < hexagons[x].length; y++){
             let centerHexagon = hexagons[x][y];
             lineGraphics.push(drawCenterLines(game, centerHexagon, x, y, lineGraphics));
             let lineGraphic = game.add.graphics(centerHexagon.graphic.x,centerHexagon.graphic.y);
-            let sideObjects = getSideObjects(x, y, centerHexagon.sideLength);
+            let sideObjects = getSideObjects(x, y, centerHexagon.sideLength*spaceFactor);
             for(let sideNumber = 0; sideNumber < 6; sideNumber++){
                 let sideObject = sideObjects[sideNumber];
                 let hexagon2Coordinates = {"x": x + sideObject.secondHex.x, "y": y + sideObject.secondHex.y};
@@ -140,7 +140,7 @@ function drawLines(game, hexagons){
 
 function drawCenterLines(game, centerHexagon, x, y){
     let lineGraphic = game.add.graphics(centerHexagon.graphic.x,centerHexagon.graphic.y);
-    let sideObjects = getSideObjects(x, y, centerHexagon.sideLength * 0.6);
+    let sideObjects = getSideObjects(x, y, centerHexagon.sideLength);
     for(let sideNumber = 0; sideNumber < 6; sideNumber++){
         let sideObject = sideObjects[sideNumber];
         let colour = teams[centerHexagon.sides[sideNumber]].colour;
@@ -158,47 +158,70 @@ function rotateHexagon(hexagon, amount){
         amount = 6-amount;
     }
     for(let i=0;i<amount;i++){
-        hexagon.sides.push(hexagon.sides.pop());
+        hexagon.sides.unshift(hexagon.sides.pop());
     }
+}
+
+function createGrid(game, gridSizeX, gridSizeY, spaceFactor){
+    let hexagons = [];
+    for(let x = 0; x < gridSizeX; x++){
+        let current_row = [];
+        hexagons.push(current_row);
+        for(let y = 0; y < gridSizeY; y++){
+            let sideLength = 20;
+            let {polygon, height: hexagonHeight} = build_hexagon_polygon(sideLength);
+            //plus ones so we don't get cut off by edge of map
+            let hexagonX = sideLength*(x+1)*1.5*spaceFactor;
+            let hexagonY = hexagonHeight*(y+1);
+            if(x%2==1){
+                hexagonY -= hexagonHeight/2;
+            }
+            hexagonY *= spaceFactor;
+            let sides = asign_sides();
+            let hexagon = {
+                sideLength: sideLength,
+                graphic: buildGraphic(game, hexagonX, hexagonY, polygon, x, y),
+                polygon: polygon,
+                x: x,
+                y: y,
+                sides: sides
+            };
+            current_row.push(hexagon);
+        }
+    }
+    return hexagons;
 }
 
 window.onload = function() {
 
-	let game = new Phaser.Game(640, 480, Phaser.CANVAS, "phaser_parent", {preload: onPreload, create: onCreate});
+	let game = new Phaser.Game(640, 480, Phaser.CANVAS, "phaser_parent", {preload: onPreload, create: onCreate, update: update, render: render});
 
 	let gridSizeX = 10;
 	let gridSizeY = 12;
     let lineGraphics = [];
     let hexagons = [];
+    let i=0;
+    let spaceFactor = 1.3;
 
 	function onPreload() {}
 
 	function onCreate() {
 	    game.stage.backgroundColor = "#ffffff";
-	    for(let x = 0; x < gridSizeX; x++){
-            let current_row = [];
-            hexagons.push(current_row);
-			for(let y = 0; y < gridSizeY; y++){
-                let sideLength = 20;
-                let {polygon, height: hexagonHeight} = build_hexagon_polygon(sideLength);
-                //plus ones so we don't get cut off by edge of map
-                let hexagonX = sideLength*(x+1)*1.5;
-                let hexagonY = hexagonHeight*(y+1);
-                if(x%2==1){
-                    hexagonY -= hexagonHeight/2;
-                }
-                let sides = asign_sides();
-                let hexagon = {
-                    sideLength: sideLength,
-                    graphic: buildGraphic(game, hexagonX, hexagonY, polygon, x, y),
-                    polygon: polygon,
-                    x: x,
-                    y: y,
-                    sides: sides
-                };
-                current_row.push(hexagon);
-			}
-		}
-        drawLines(game, hexagons);
+        hexagons = createGrid(game, gridSizeX, gridSizeY, spaceFactor);
 	}
+
+    function update(){
+        i++;
+        if(i%10===0){
+            console.log("1 in 100 update");
+            for(let lineGraphic of lineGraphics){
+                game.world.remove(lineGraphic);
+            }
+            let hexagon = hexagons[Math.floor(Math.random()*gridSizeX)][Math.floor(Math.random()*gridSizeY)];
+            rotateHexagon(hexagon, 1);
+            lineGraphics = drawLines(game, hexagons, spaceFactor);
+        }
+    }
+
+    function render(){}
 };
