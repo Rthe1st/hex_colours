@@ -9,13 +9,10 @@ Vagrant.configure("2") do |config|
 
   config.ssh.insert_key = false
 
-  config.vm.box = "ubuntu/trusty64"
+  config.vm.box = "hashicorp/precise64"
 
-  config.vm.network "forwarded_port", host: 80, guest: 80
-  
-  #config.vm.network "private_network", ip: "192.168.33.10"
-  #host_ip: "192.168.0.*" cant be used because it screws with docker install
+  config.vm.network "forwarded_port", host: 8080, guest: 80
 
   config.vm.provision "shell", path: "provision.sh"
-  
+
 end
