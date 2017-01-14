@@ -1,15 +1,30 @@
 import {teams} from "./lazyDesign.js";
 import * as geometry from "./geometry.js";
 
-export default class Hexagon{
-    constructor(outerSideLength, gridCords, innerSideLength, game) {
+let lineStyle = {
+    thickness: 5,
+    alpha: 1
+};
+
+let hexStyle = {
+    colour: 0xFF33ff,
+    spaceFactor: 0.6
+};
+
+export function hexagonSettingsGui(gui){
+    gui.add(lineStyle, 'thickness', 0,20);
+    gui.add(lineStyle, 'alpha', 0, 1);
+    gui.addColor(hexStyle, 'colour');
+    gui.add(hexStyle, 'spaceFactor', 0, 2);
+}
+
+export class Hexagon{
+    constructor(outerSideLength, gridCords, game) {
         this.outerSideLength = outerSideLength;
-        this.innerSideLength = innerSideLength;
         this.gridCords = gridCords;
         this.game = game;
-        this.polygon = new Phaser.Polygon(geometry.relativeScaledHexPoints(this.innerSideLength));
         this.sides = this.assignSides(teams);
-        this.image = game.add.image(this.worldCords.x, this.worldCords.y);
+        this.image = game.add.sprite(this.worldCords.x, this.worldCords.y);
         this.image.inputEnabled = true;
         let hexagon = this;
         //this isn't pixle perfect, so use in conjuction with polygon hit test?
@@ -17,18 +32,31 @@ export default class Hexagon{
         this.image.events.onInputDown.add(function(s){
             console.log('clicked');
             hexagon.rotate(1);
-            hexagon.dirty = true;
         });
         //check Graphics.generateTexture for performance tip
         this.graphics = new Phaser.Graphics(game, 0, 0);
         this.image.addChild(this.graphics);
         this.sideGraphics = new Phaser.Graphics(game, 0, 0);
         this.image.addChild(this.sideGraphics);
-        this.drawHexagon();
+        //look at adding this to a group/image class with the graphics object
+        this.hexagonText = this.game.add.text(this.worldCords.x-10, this.worldCords.y-10, this.gridCords.x + "," + this.gridCords.y);
+    }
+
+    destroy(){
+        this.image.destroy();
+        this.hexagonText.destroy();
+    }
+
+    get innerSideLength(){
+        return this.outerSideLength*hexStyle.spaceFactor;
     }
 
     refreshPosition(){
-        this.image.moveTo(this.worldCords.x,this.worldCords.y);
+        this.image.x = this.worldCords.x;
+        this.image.y = this.worldCords.y;
+        this.drawHexagon();
+        this.hexagonText.x = this.worldCords.x;
+        this.hexagonText.y = this.worldCords.y;
     }
 
     get worldCords(){
@@ -70,27 +98,23 @@ export default class Hexagon{
 
     drawSides(){
         this.sideGraphics.clear();
+        let hexPoints = geometry.relativeScaledHexPoints(this.innerSideLength);
         for(let sideNumber = 0; sideNumber < 6; sideNumber++){
             let colour = teams[this.sides[sideNumber]].colour;
-            this.sideGraphics.lineStyle(5, colour, 100);
-            let hexPoints = geometry.relativeScaledHexPoints(this.innerSideLength);
+            this.sideGraphics.lineStyle(lineStyle.thickness, colour, lineStyle.alpha);
             let start = hexPoints[sideNumber];
             this.sideGraphics.moveTo(start.x, start.y);
             let end = hexPoints[(sideNumber+1)%6];
-            //for "across hex" mode
-            //let end = hexPoints[(sideNumber+3)%6];
             this.sideGraphics.lineTo(end.x, end.y);
         }
     }
 
     drawHexagon(){
         this.graphics.clear();
-        this.graphics.beginFill(0xFF33ff);
-        this.graphics.drawPolygon(this.polygon.points);
+        this.graphics.beginFill(hexStyle.colour);
+        this.graphics.drawPolygon(geometry.relativeScaledHexPoints(this.innerSideLength));
         this.graphics.endFill();
-        //look at adding this to a group/image class with the graphics object
-        var hexagonText = this.game.add.text(this.worldCords.x-10, this.worldCords.y-10, this.gridCords.x + "," + this.gridCords.y);
-        hexagonText.font = "arial";
-        hexagonText.fontSize = 8;
+        this.hexagonText.font = "arial";
+        this.hexagonText.fontSize = 8;
     }
 }

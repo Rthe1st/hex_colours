@@ -1,11 +1,48 @@
-import Hexagon from "./hexagon.js";
-import CombinedSide from "./combinedSide.js";
+import {Hexagon} from "./hexagon.js";
+import {CombinedSide} from "./combinedSide.js";
 
 export default class{
-    constructor(game, gridWidth, gridHeight, sideLength, spaceFactor){
-        this.hexagons = createGrid(game, gridWidth, gridHeight, sideLength, spaceFactor);
+    constructor(game, gridWidth, gridHeight, sideLength){
+        this.hexagons = createGrid(game, gridWidth, gridHeight, sideLength);
         this.combinedSides = createCombinedLines(game, this.hexagons, sideLength);
     }
+
+    destroy(){
+        for(let row of this.hexagons){
+            for(let hexagon of row){
+                hexagon.destroy();
+            }
+        }
+        for(let combinedSide of this.combinedSides){
+            combinedSide.destroy();
+        }
+    }
+
+    update(){
+        for(let row of this.hexagons){
+            for(let hexagon of row){
+                hexagon.drawSides();
+                hexagon.drawHexagon();
+            }
+        }
+        for(let combinedSide of this.combinedSides){
+            combinedSide.draw();
+        }
+    }
+
+    updateSideLength(sideLength){
+        for(let row of this.hexagons){
+            for(let hexagon of row){
+                hexagon.outerSideLength = sideLength;
+                hexagon.refreshPosition();
+            }
+        }
+        for(let combinedSide of this.combinedSides){
+            combinedSide.length = sideLength;
+            combinedSide.refreshPosition();
+        }
+    }
+
 }
 
 function getAdjacentHexagonOffset(gridX, side){
@@ -54,13 +91,13 @@ function createCombinedLines(game, hexagons, sideLength){
     return combinedSides;
 }
 
-function createGrid(game, gridSizeX, gridSizeY, sideLength, spaceFactor){
+function createGrid(game, gridSizeX, gridSizeY, sideLength){
     let hexagons = [];
     for(let x = 0; x < gridSizeX; x++){
         let current_row = [];
         hexagons.push(current_row);
         for(let y = 0; y < gridSizeY; y++){
-            let hexagon = new Hexagon(sideLength, {x: x, y: y}, sideLength*spaceFactor, game);
+            let hexagon = new Hexagon(sideLength, {x: x, y: y}, game);
             hexagon.drawSides();
             current_row.push(hexagon);
         }

@@ -1,7 +1,17 @@
 import {colours, teams} from "./lazyDesign.js";
 import * as geometry from "./geometry.js";
 
-export default class CombinedSide{
+let lineStyle = {
+    thickness: 5,
+    alpha: 1
+};
+
+export function combinedSideSettingsGui(gui){
+    gui.add(lineStyle, 'thickness', 0,20);
+    gui.add(lineStyle, 'alpha', 0, 1);
+}
+
+export class CombinedSide{
     constructor(game, hexagonInfos, length){
         if(hexagonInfos.length !== 1 && hexagonInfos.length !== 2){
             console.log("combined side expects to combine 1 or 2 hexagons, not: " . hexagonInfos.length);
@@ -11,8 +21,13 @@ export default class CombinedSide{
         this.graphics = game.add.graphics(this.worldCords.x,this.worldCords.y);
     }
 
+    destroy(){
+        this.graphics.destroy();
+    }
+
     refreshPosition(){
-        this.graphics.moveTo(this.worldCords.x,this.worldCords.y);
+        this.graphics.x = this.worldCords.x;
+        this.graphics.y = this.worldCords.y;
     }
 
     get worldCords(){
@@ -27,7 +42,7 @@ export default class CombinedSide{
             let secondColour = teams[this.hexagonInfos[1].hexagon.sides[this.hexagonInfos[1].side]].colour;
             colour = this.colourCombinations(colour, secondColour);
         }
-        this.graphics.lineStyle(10, colour);
+        this.graphics.lineStyle(lineStyle.thickness, colour, lineStyle.alpha);
         let hexPoints = geometry.relativeScaledHexPoints(this.length);
         let start = hexPoints[this.hexagonInfos[0].side];
         this.graphics.moveTo(start.x, start.y);
