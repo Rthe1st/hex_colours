@@ -1,21 +1,13 @@
 import {teams} from "./lazyDesign.js";
+import * as geometry from "./geometry.js";
 
 export default class Hexagon{
-    constructor(sideLength, gridCords, spaceFactor, game) {
-        this.sideLength = sideLength;
+    constructor(outerSideLength, gridCords, innerSideLength, game) {
+        this.outerSideLength = outerSideLength;
+        this.innerSideLength = innerSideLength;
         this.gridCords = gridCords;
         this.game = game;
-        let {polygon} = this.buildHexagonPolygon(this.sideLength*spaceFactor);
-        this.polygon = polygon;
-        let hexagonHeight = 2*Math.sin(Math.PI/3)*sideLength;
-        //plus ones so we don't get cut off by edge of map
-        this.worldCords = {
-            x: sideLength*(gridCords.x+1)*1.5,
-            y: hexagonHeight*(gridCords.y+1)
-        };
-        if(this.gridCords.x%2==1){
-            this.worldCords.y -= hexagonHeight/2;
-        }
+        this.polygon = new Phaser.Polygon(geometry.relativeScaledHexPoints(this.innerSideLength));
         this.sides = this.assignSides(teams);
         this.image = game.add.image(this.worldCords.x, this.worldCords.y);
         this.image.inputEnabled = true;
@@ -30,9 +22,28 @@ export default class Hexagon{
         //check Graphics.generateTexture for performance tip
         this.graphics = new Phaser.Graphics(game, 0, 0);
         this.image.addChild(this.graphics);
-        this.buildGraphic();
         this.sideGraphics = new Phaser.Graphics(game, 0, 0);
         this.image.addChild(this.sideGraphics);
+        this.drawHexagon();
+    }
+
+    refreshPosition(){
+        this.image.moveTo(this.worldCords.x,this.worldCords.y);
+    }
+
+    get worldCords(){
+        let ySpacing = 2*Math.sin(Math.PI/3)*this.outerSideLength;
+        let xSpacing = this.outerSideLength*1.5;
+        //plus ones so we don't get cut off by edge of map
+        let position =  {
+            x: xSpacing*(this.gridCords.x+1),
+            y: ySpacing*(this.gridCords.y+1)
+        };
+        let isOddColumn = this.gridCords.x%2==1;
+        if(isOddColumn){
+            position.y -= ySpacing/2;
+        }
+        return position;
     }
 
     assignSides(teams){
@@ -57,25 +68,12 @@ export default class Hexagon{
         }
     }
 
-    buildHexagonPolygon(sideLength){
-        let corner_vertical = Math.sin(Math.PI/3)*sideLength;
-        let corner_horizontal = Math.cos(Math.PI/3)*sideLength;
-        let polygon = new Phaser.Polygon(
-            new Phaser.Point(-corner_horizontal, -corner_vertical),
-            new Phaser.Point(+corner_horizontal, -corner_vertical),
-            new Phaser.Point(sideLength, 0),
-            new Phaser.Point(+corner_horizontal, +corner_vertical),
-            new Phaser.Point(-corner_horizontal, +corner_vertical),
-            new Phaser.Point(-sideLength, 0)
-        );
-        return {polygon: polygon, height: 2*Math.sin(Math.PI/3)*sideLength};
-    }
-
-    drawHexagonSides(hexPoints){
+    drawSides(){
         this.sideGraphics.clear();
         for(let sideNumber = 0; sideNumber < 6; sideNumber++){
             let colour = teams[this.sides[sideNumber]].colour;
             this.sideGraphics.lineStyle(5, colour, 100);
+            let hexPoints = geometry.relativeScaledHexPoints(this.innerSideLength);
             let start = hexPoints[sideNumber];
             this.sideGraphics.moveTo(start.x, start.y);
             let end = hexPoints[(sideNumber+1)%6];
@@ -85,7 +83,7 @@ export default class Hexagon{
         }
     }
 
-    buildGraphic(){
+    drawHexagon(){
         this.graphics.clear();
         this.graphics.beginFill(0xFF33ff);
         this.graphics.drawPolygon(this.polygon.points);

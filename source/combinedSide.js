@@ -1,24 +1,34 @@
 import {colours, teams} from "./lazyDesign.js";
+import * as geometry from "./geometry.js";
 
 export default class CombinedSide{
-    constructor(game, hexagonInfos){
+    constructor(game, hexagonInfos, length){
         if(hexagonInfos.length !== 1 && hexagonInfos.length !== 2){
             console.log("combined side expects to combine 1 or 2 hexagons, not: " . hexagonInfos.length);
         }
+        this.length = length;
         this.hexagonInfos = hexagonInfos;
-        this.graphics = game.add.graphics(hexagonInfos[0].hexagon.worldCords.x,hexagonInfos[0].hexagon.worldCords.y);
+        this.graphics = game.add.graphics(this.worldCords.x,this.worldCords.y);
     }
 
-    //this parameter is pretty gross
-    draw(hexPoints){
+    refreshPosition(){
+        this.graphics.moveTo(this.worldCords.x,this.worldCords.y);
+    }
+
+    get worldCords(){
+        //all calulates are done relative to first hexagon
+        return this.hexagonInfos[0].hexagon.worldCords;
+    }
+
+    draw(){
         this.graphics.clear();
-        let colour1 = teams[this.hexagonInfos[0].hexagon.sides[this.hexagonInfos[0].side]].colour;
-        if(this.hexagonInfos.length === 1){
-           this.graphics.lineStyle(10, colour1, 100);
-       }else{
-            let colour2 = teams[this.hexagonInfos[1].hexagon.sides[this.hexagonInfos[1].side]].colour;
-            this.graphics.lineStyle(10, this.colourCombinations(colour1, colour2));
+        let colour = teams[this.hexagonInfos[0].hexagon.sides[this.hexagonInfos[0].side]].colour;
+        if(this.hexagonInfos.length === 2){
+            let secondColour = teams[this.hexagonInfos[1].hexagon.sides[this.hexagonInfos[1].side]].colour;
+            colour = this.colourCombinations(colour, secondColour);
         }
+        this.graphics.lineStyle(10, colour);
+        let hexPoints = geometry.relativeScaledHexPoints(this.length);
         let start = hexPoints[this.hexagonInfos[0].side];
         this.graphics.moveTo(start.x, start.y);
         let end = hexPoints[(this.hexagonInfos[0].side+1)%6];
