@@ -1,4 +1,4 @@
-import {teams} from "./lazyDesign.js";
+import {teams} from "./teamInfo.js";
 import * as geometry from "./geometry.js";
 
 let lineStyle = {
@@ -19,11 +19,11 @@ export function hexagonSettingsGui(gui){
 }
 
 export class Hexagon{
-    constructor(outerSideLength, gridCords, game) {
+    constructor(outerSideLength, gridCords, game, sides) {
         this.outerSideLength = outerSideLength;
         this.gridCords = gridCords;
         this.game = game;
-        this.sides = this.assignSides(teams);
+        this.sides = sides;
         this.image = game.add.sprite(this.worldCords.x, this.worldCords.y);
         this.image.inputEnabled = true;
         let hexagon = this;
@@ -64,25 +64,14 @@ export class Hexagon{
         let xSpacing = this.outerSideLength*1.5;
         //plus ones so we don't get cut off by edge of map
         let position =  {
-            x: xSpacing*(this.gridCords.x+1),
-            y: ySpacing*(this.gridCords.y+1)
+            x: (xSpacing*this.gridCords.x)+this.outerSideLength,
+            y: (ySpacing*this.gridCords.y)+(2*Math.sin(Math.PI/3)*this.outerSideLength)
         };
         let isOddColumn = this.gridCords.x%2==1;
         if(isOddColumn){
             position.y -= ySpacing/2;
         }
         return position;
-    }
-
-    assignSides(teams){
-        let sides = [];
-        for(let sideNumber = 0; sideNumber < 6; sideNumber++){
-            //for non-random sides
-            //sides.push(sideNumber%teams.length);
-            //for random sides
-            sides.push(Math.floor(Math.random()*teams.length));
-        }
-        return sides;
     }
 
     rotate(amount){

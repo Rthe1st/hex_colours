@@ -1,10 +1,34 @@
 import {Hexagon} from "./hexagon.js";
 import {CombinedSide} from "./combinedSide.js";
 
-export default class{
-    constructor(game, gridWidth, gridHeight, sideLength){
-        this.hexagons = createGrid(game, gridWidth, gridHeight, sideLength);
+let boardSettings = {
+
+};
+
+export function boardSettingsGui(gui){
+}
+
+
+export class Board{
+    constructor(game, dataString, sideLength){
+        this.hexagons = parseDataString(dataString, sideLength, game);
         this.combinedSides = createCombinedLines(game, this.hexagons, sideLength);
+    }
+
+    get dataString(){
+        let rows = [];
+        for(let row of this.hexagons){
+            let hexagons = [];
+            for(let hexagon of row){
+                let sides = [];
+                for(let side of hexagon.sides){
+                    sides.push(side);
+                }
+                hexagons.push(sides.join(":"));
+            }
+            rows.push(hexagons.join("h"));
+        }
+        return rows.join("r");
     }
 
     destroy(){
@@ -91,16 +115,32 @@ function createCombinedLines(game, hexagons, sideLength){
     return combinedSides;
 }
 
-function createGrid(game, gridSizeX, gridSizeY, sideLength){
+function parseDataString(string, sideLength, game){
     let hexagons = [];
-    for(let x = 0; x < gridSizeX; x++){
-        let current_row = [];
-        hexagons.push(current_row);
-        for(let y = 0; y < gridSizeY; y++){
-            let hexagon = new Hexagon(sideLength, {x: x, y: y}, game);
-            hexagon.drawSides();
-            current_row.push(hexagon);
-        }
+    for(let [x, rowData] of string.split("r").entries()){
+        let row = parseRowString(rowData, sideLength, x, game);
+        hexagons.push(row);
     }
     return hexagons;
+}
+
+function parseRowString(rowString, sideLength, x, game){
+    let current_row = [];
+    for(let [y, hexagonData] of rowString.split("h").entries()){
+        let hexagon = parseHexString(hexagonData, sideLength, {x: x, y: y}, game);
+        current_row.push(hexagon);
+    }
+    return current_row;
+}
+
+function parseHexString(hexagonString, sideLength, cords, game){
+    let sides = hexagonString.split(":");
+    if(sides.length !== 6){
+        console.log("invalid map string hexagon");
+        console.log(hexagonString);
+    }
+    let hexagon = new Hexagon(sideLength, cords, game, sides);
+    hexagon.drawSides();
+    return hexagon;
+
 }

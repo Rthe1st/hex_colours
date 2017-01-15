@@ -1,4 +1,4 @@
-import {colours, teams} from "./lazyDesign.js";
+import {teams} from "./teamInfo.js";
 import * as geometry from "./geometry.js";
 
 let lineStyle = {
@@ -6,9 +6,18 @@ let lineStyle = {
     alpha: 1
 };
 
+let combinedColours = {
+    team_0_1: 0xffb000,
+    team_1_2: 0x00ff00,
+    team_2_0: 0xaf00ff
+};
+
 export function combinedSideSettingsGui(gui){
     gui.add(lineStyle, 'thickness', 0,20);
     gui.add(lineStyle, 'alpha', 0, 1);
+    gui.addColor(combinedColours, 'team_0_1');
+    gui.addColor(combinedColours, 'team_1_2');
+    gui.addColor(combinedColours, 'team_2_0');
 }
 
 export class CombinedSide{
@@ -37,36 +46,46 @@ export class CombinedSide{
 
     draw(){
         this.graphics.clear();
-        let colour = teams[this.hexagonInfos[0].hexagon.sides[this.hexagonInfos[0].side]].colour;
+        let firstTeam = this.hexagonInfos[0].hexagon.sides[this.hexagonInfos[0].side];
+        let colour;
         if(this.hexagonInfos.length === 2){
-            let secondColour = teams[this.hexagonInfos[1].hexagon.sides[this.hexagonInfos[1].side]].colour;
-            colour = this.colourCombinations(colour, secondColour);
+            let secondTeam = this.hexagonInfos[1].hexagon.sides[this.hexagonInfos[1].side];
+            colour = this.manualCombine(firstTeam, secondTeam);
+        }else{
+            colour = teams[firstTeam].colour;
         }
         this.graphics.lineStyle(lineStyle.thickness, colour, lineStyle.alpha);
         let hexPoints = geometry.relativeScaledHexPoints(this.length);
         let start = hexPoints[this.hexagonInfos[0].side];
         this.graphics.moveTo(start.x, start.y);
         let end = hexPoints[(this.hexagonInfos[0].side+1)%6];
-        //keep this as possible alternative, cause it looked cool
-        //probably be better if this was done on the hexagon sides and combine sides ignore in that mode
-        //let end = hexPoints[this.hexagonInfos[1].side];
         this.graphics.lineTo(end.x, end.y);
     }
 
-    colourCombinations(colour1, colour2){
-        let coloursToCombine = [colour1, colour2];
-        if(colour1 === colour2){
-            return colour1;
-        }else if(coloursToCombine.includes(colours.get("red")) && coloursToCombine.includes(colours.get("yellow"))){
-            return colours.get("orange");
-        }else if(coloursToCombine.includes(colours.get("red")) && coloursToCombine.includes(colours.get("blue"))){
-            return colours.get("purple");
-        }else if(coloursToCombine.includes(colours.get("yellow")) && coloursToCombine.includes(colours.get("blue"))){
-            return colours.get("green");
+    manualCombine(first_team, second_team){
+        function logError(){
+            console.log("errror, invalid teams for combining sides");
+            console.log(first_team);
+            console.log(second_team);
+        }
+        let temp = Math.max(first_team, second_team);
+        first_team = Math.min(first_team, second_team);
+        second_team = temp;
+        for(let team of [first_team, second_team]){
+            if(team < 0 || team > teams.length){
+                logError();
+            }
+        }
+        if(first_team === second_team){
+            return teams[first_team].colour;
+        }else if(first_team === 0 && second_team === 1){
+                return combinedColours.team_0_1;
+        }else if(first_team === 1 && second_team === 2){
+                return combinedColours.team_1_2;
+        }else if(first_team === 0 && second_team === 2){
+                return combinedColours.team_2_0;
         }else{
-            console.log("error, not colour combination availible");
-            console.log(colour1);
-            console.log(colour2);
+            logError();
         }
     }
 }
