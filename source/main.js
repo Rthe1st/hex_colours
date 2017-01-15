@@ -5,145 +5,91 @@
 //window.p2 = require( 'phaser/build/custom/p2' );
 //window.Phaser = require( 'phaser/build/custom/phaser-split' );
 
-import Hexagon from "./hexagon.js";
-import CombinedSide from "./combinedSide.js";
+import dat from "dat-gui";
+import {hexagonSettingsGui} from "./hexagon.js";
+import {combinedSideSettingsGui} from "./combinedSide.js";
+import {boardSettingsGui, Board} from "./board.js";
+import {teamInfoSettingsGui, teams} from "./teamInfo.js";
+import * as sideGeneration from "./sideGeneration.js";
 
-function getSpaceHexPoints(sideLength){
-    let corner_vertical = Math.sin(Math.PI/3)*sideLength;
-    let corner_horizontal = Math.cos(Math.PI/3)*sideLength;
-    return [
-        {x: -corner_horizontal, y: -corner_vertical},
-        {x: +corner_horizontal, y: -corner_vertical},
-        {x: sideLength, y: 0},
-        {x: +corner_horizontal, y: +corner_vertical},
-        {x: -corner_horizontal, y: +corner_vertical},
-        {x: -sideLength, y: 0}
-    ];
-}
-
-function getAdjacentHexagonOffset(gridX, side){
-    //even column: odd column:
-    //*a*          aaa
-    //aha          aha
-    //aaa          *a*
-    let diagonalYAbove = gridX%2;
-    let diagonalYBelow = gridX%2-1;
-    //assumes side 0 is top, increasing clockwise
-    let adjacentHexOffset = [
-        {x: 0, y: -1}, {x: 1, y: -gridX%2}, {x: 1, y: 1-gridX%2},
-        {x: 0, y: 1}, {x: -1, y: 1-gridX%2}, {x: -1, y: -gridX%2}
-    ];
-    return adjacentHexOffset[side];
-}
-
-function createCombinedLines(game, hexagons){
-    let combinedSides = [];
-    for(let x = 0; x < hexagons.length; x++){
-        for(let y = 0; y < hexagons[x].length; y++){
-            let centerHexagon = hexagons[x][y];
-            for(let sideNumber = 0; sideNumber < 6; sideNumber++){
-                let hexInfo = [{
-                    hexagon: centerHexagon,
-                    side: sideNumber
-                }];
-                let adjacentHexOffset = getAdjacentHexagonOffset(x, sideNumber);
-                let hexagon2Coordinates = {x: x + adjacentHexOffset.x, y: y + adjacentHexOffset.y};
-                let hexagon2Exists = !(hexagon2Coordinates.x < 0 || hexagon2Coordinates.x >= hexagons.length || hexagon2Coordinates.y < 0 || hexagon2Coordinates.y >= hexagons[x].length);
-                if(!hexagon2Exists){
-                    combinedSides.push(new CombinedSide(game, hexInfo));
-                }else if(sideNumber < 3){
-                   //sides numbered above 3 are covered whn we iterate over the other hexagon (so we don't create every combine twice)
-                   hexInfo.push({
-                       hexagon: hexagons[hexagon2Coordinates.x][hexagon2Coordinates.y],
-                       side: (sideNumber + 3) % 6
-                   });
-                   console.log("center hex");
-                   console.log(centerHexagon.gridCords);
-                   console.log("side: " + sideNumber);
-                   console.log("hex2");
-                   console.log(hexagon2Coordinates);
-                   console.log("side: " + ((sideNumber + 3) % 6));
-                    combinedSides.push(new CombinedSide(game, hexInfo));
-                }else{
-                    continue;
-                }
-            }
-        }
+//this doesnt work properly
+function calculateSideLength(width, height, gridWidth, gridHeight){
+    let boardWidth = (1.5*gridWidth)+1;
+    let boardHeight = (2*Math.sin(Math.PI/3)*gridHeight)+(1.5*Math.sin(Math.PI/3));
+    if(boardWidth > boardHeight){
+        return width/(1.5*gridWidth+1);
+    }else{
+        return height/((2*Math.sin(Math.PI/3)*gridHeight)+(1.5*Math.sin(Math.PI/3)));
     }
-    return combinedSides;
 }
 
-function createGrid(game, gridSizeX, gridSizeY, sideLength, spaceFactor){
-    let hexagons = [];
-    for(let x = 0; x < gridSizeX; x++){
-        let current_row = [];
-        hexagons.push(current_row);
-        for(let y = 0; y < gridSizeY; y++){
-            let hexagon = new Hexagon(sideLength, {x: x, y: y}, spaceFactor, game);
-            hexagon.drawHexagonSides(getSpaceHexPoints(sideLength*spaceFactor));
-            //for "across hex" mode
-            //hexagon.drawHexagonSides(getSpaceHexPoints(sideLength));
-            current_row.push(hexagon);
-        }
+let globalParams = {
+    width: window.innerWidth,
+    height: window.innerHeight,
+    gridWidth: 2,
+    gridHeight: 2,
+    sideGeneration: "random",//be nice to store function directly here but doesn't play nice with dat-gui,
+};
+
+globalParams.sideLength = calculateSideLength(globalParams.width, globalParams.height, globalParams.gridWidth, globalParams.gridHeight);
+
+function onCreate(game) {
+    let settingsGui = new dat.GUI();
+    game.stage.backgroundColor = "#000000";//consider grey because less contrast
+    game.board = buildBoard(game);
+    settingsGui.addColor(game.stage, 'backgroundColor');
+    settingsGui.add(globalParams, 'width', 0, window.innerWidth).onFinishChange(function(newWidth){
+        game.scale.setGameSize(newWidth, game.height);
+        globalParams.sideLength = calculateSideLength(globalParams.width, globalParams.height, globalParams.gridWidth, globalParams.gridHeight);
+        game.board.updateSideLength(globalParams.sideLength);
+    });
+    settingsGui.add(globalParams, 'height', 0, window.innerHeight).onFinishChange(function(newHeight){
+        game.scale.setGameSize(game.width, newHeight);
+        globalParams.sideLength = calculateSideLength(globalParams.width, globalParams.height, globalParams.gridWidth, globalParams.gridHeight);
+        game.board.updateSideLength(globalParams.sideLength);
+    });
+    settingsGui.add(globalParams, 'sideLength', 0, 300).onFinishChange(function(sideLength){
+        game.board.updateSideLength(sideLength);
+    });
+    settingsGui.add(globalParams, 'gridWidth', 0).step(1);
+    settingsGui.add(globalParams, 'gridHeight', 0).step(1);
+    settingsGui.add(globalParams, 'sideGeneration', ["random", "even", "dataString"]).listen().onFinishChange(function(genMethod){
+        game.recreateBoard = true;
+    });
+    //this cant point to board.dataString because dat-gui doesn't work with getters/setters
+    settingsGui.add(globalParams, 'dataString').onFinishChange(function(newDataString){
+        game.recreateBoard = true;
+    });
+    boardSettingsGui(settingsGui);
+    hexagonSettingsGui(settingsGui);
+    combinedSideSettingsGui(settingsGui);
+    teamInfoSettingsGui(settingsGui);
+}
+
+function buildBoard(game, boardData){
+    if(globalParams.sideGeneration !== "dataString"){
+        let generationFunction = sideGeneration.mappingForDatGui.get(globalParams.sideGeneration);
+        boardData = generationFunction(teams, globalParams.gridWidth, globalParams.gridHeight);
+        globalParams.sideLength = calculateSideLength(globalParams.width, globalParams.height, globalParams.gridWidth, globalParams.gridHeight);
     }
-    return hexagons;
+    let board = new Board(game, boardData, globalParams.sideLength);
+    globalParams.dataString = board.dataString;
+    globalParams.sideGeneration = "dataString";
+    //todo: update dat-gui to relfect this^^
+    return board;
+}
+
+function update(game){
+    //so it's not destory mid update
+    //this is why our classes should extend phases, so we don't have to deal with this stuff
+    if(game.recreateBoard){
+        game.board.destroy();
+        game.board = buildBoard(game, globalParams.dataString);
+        game.recreateBoard = false;
+    }
+    game.board.update();
 }
 
 window.onload = function() {
-
-    let width = 1000;
-    let height = 480;
-
-	let game = new Phaser.Game(width, height, Phaser.CANVAS, "phaser_parent", {preload: onPreload, create: onCreate, update: update, render: render});
-
-	let gridSizeX = 5;
-	let gridSizeY = 3;
-    let lineGraphics = [];
-    let hexagons = [];
-    let i=0;
-    let sideLength;
-    if(width < height){
-        sideLength = width/((gridSizeX+1)*1.5);
-    }else{
-        sideLength = height/((gridSizeY+1)*2*Math.sin(Math.PI/3));
-    }
-
-    let spaceFactor = 0.6;
-    let combinedSides = [];
-
-	function onPreload() {}
-
-	function onCreate() {
-	    game.stage.backgroundColor = "#000000";//consider grey because less contrast
-        hexagons = createGrid(game, gridSizeX, gridSizeY, sideLength, spaceFactor);
-        combinedSides = createCombinedLines(game, hexagons);
-	}
-
-    function update(){
-        i++;
-        if(i%10===0){
-            console.log("1 in 100 update");
-            let hexagon = hexagons[Math.floor(Math.random()*gridSizeX)][Math.floor(Math.random()*gridSizeY)];
-            //hexagon.rotate(1);
-            //hexagon.drawHexagonSides(getSpaceHexPoints(sideLength));
-            //todo: have combinedSides listen for rotation of their hexagons
-            //then we can only update those effected by the rotation
-            for(let row of hexagons){
-                for(let hexagon of row){
-                    if(hexagon.dirty){
-                        hexagon.drawHexagonSides(getSpaceHexPoints(sideLength*spaceFactor));
-                        //for "across hex" mode
-                        //hexagon.drawHexagonSides(getSpaceHexPoints(sideLength));
-                        hexagon.dirty = false;
-                    }
-                }
-            }
-            for(let combinedSide of combinedSides){
-                //comment out for "across hex"
-                combinedSide.draw(getSpaceHexPoints(sideLength));
-            }
-        }
-    }
-
-    function render(){}
+	let game = new Phaser.Game(globalParams.width, globalParams.height, Phaser.CANVAS, "phaser_parent", {create: onCreate, update: update});
 };
