@@ -11,6 +11,7 @@ import {combinedSideSettingsGui} from "./combinedSide.js";
 import {boardSettingsGui, Board} from "./board.js";
 import {teamInfoSettingsGui, teams} from "./teamInfo.js";
 import * as sideGeneration from "./sideGeneration.js";
+//import * as dashboard from "./dashboard.js";
 
 //this doesnt work properly
 function calculateSideLength(width, height, gridWidth, gridHeight){
@@ -37,6 +38,7 @@ function onCreate(game) {
     let settingsGui = new dat.GUI();
     game.stage.backgroundColor = "#000000";//consider grey because less contrast
     game.board = buildBoard(game);
+    //game.dashboard = new dashboard.Dashboard(game, 50, 50);
     settingsGui.addColor(game.stage, 'backgroundColor');
     settingsGui.add(globalParams, 'width', 0, window.innerWidth).onFinishChange(function(newWidth){
         game.scale.setGameSize(newWidth, game.height);
@@ -60,7 +62,7 @@ function onCreate(game) {
     settingsGui.add(globalParams, 'dataString').onFinishChange(function(newDataString){
         game.recreateBoard = true;
     });
-    boardSettingsGui(settingsGui);
+    boardSettingsGui(settingsGui, game);
     hexagonSettingsGui(settingsGui);
     combinedSideSettingsGui(settingsGui);
     teamInfoSettingsGui(settingsGui);
@@ -75,7 +77,6 @@ function buildBoard(game, boardData){
     let board = new Board(game, boardData, globalParams.sideLength);
     globalParams.dataString = board.dataString;
     globalParams.sideGeneration = "dataString";
-    //todo: update dat-gui to relfect this^^
     return board;
 }
 
@@ -88,6 +89,7 @@ function update(game){
         game.recreateBoard = false;
     }
     game.board.update();
+    //game.dashboard.draw(teams[0], 2,3);
 }
 
 window.onload = function() {

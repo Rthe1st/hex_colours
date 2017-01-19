@@ -41,18 +41,21 @@ export class CombinedSide{
 
     get worldCords(){
         //all calulates are done relative to first hexagon
-        return this.hexagonInfos[0].hexagon.worldCords;
+        return {
+            x: this.hexagonInfos[0].hexagon.x,
+            y: this.hexagonInfos[0].hexagon.y
+        };
     }
 
     draw(){
         this.graphics.clear();
-        let firstTeam = this.hexagonInfos[0].hexagon.sides[this.hexagonInfos[0].side];
+        let firstTeam = this.hexagonInfos[0].hexagon.data.sidesData[this.hexagonInfos[0].side];
         let colour;
         if(this.hexagonInfos.length === 2){
-            let secondTeam = this.hexagonInfos[1].hexagon.sides[this.hexagonInfos[1].side];
+            let secondTeam = this.hexagonInfos[1].hexagon.data.sidesData[this.hexagonInfos[1].side];
             colour = this.manualCombine(firstTeam, secondTeam);
         }else{
-            colour = teams[firstTeam].colour;
+            colour = firstTeam.colour;
         }
         this.graphics.lineStyle(lineStyle.thickness, colour, lineStyle.alpha);
         let hexPoints = geometry.relativeScaledHexPoints(this.length);
@@ -68,21 +71,23 @@ export class CombinedSide{
             console.log(first_team);
             console.log(second_team);
         }
-        let temp = Math.max(first_team, second_team);
-        first_team = Math.min(first_team, second_team);
-        second_team = temp;
+        if(first_team.number > second_team.number){
+            let temp = first_team;
+            first_team = second_team;
+            second_team = temp;
+        }
         for(let team of [first_team, second_team]){
-            if(team < 0 || team > teams.length){
+            if(team.number < 0 || team.number > teams.length){
                 logError();
             }
         }
         if(first_team === second_team){
-            return teams[first_team].colour;
-        }else if(first_team === 0 && second_team === 1){
+            return first_team.colour;
+        }else if(first_team.number === 0 && second_team.number === 1){
                 return combinedColours.team_0_1;
-        }else if(first_team === 1 && second_team === 2){
+        }else if(first_team.number === 1 && second_team.number === 2){
                 return combinedColours.team_1_2;
-        }else if(first_team === 0 && second_team === 2){
+        }else if(first_team.number === 0 && second_team.number === 2){
                 return combinedColours.team_2_0;
         }else{
             logError();

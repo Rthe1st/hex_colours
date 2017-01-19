@@ -1,11 +1,15 @@
 import {Hexagon} from "./hexagon.js";
 import {CombinedSide} from "./combinedSide.js";
+import * as teamInfo from "./teamInfo.js";
 
 let boardSettings = {
-
+    spaceFactor: 0.6
 };
 
-export function boardSettingsGui(gui){
+export function boardSettingsGui(gui, game){
+    gui.add(boardSettings, 'spaceFactor', 0, 2).listen().onFinishChange(function(genMethod){
+        game.recreateBoard = true;
+    });
 }
 
 
@@ -20,11 +24,7 @@ export class Board{
         for(let row of this.hexagons){
             let hexagons = [];
             for(let hexagon of row){
-                let sides = [];
-                for(let side of hexagon.sides){
-                    sides.push(side);
-                }
-                hexagons.push(sides.join(":"));
+                hexagons.push(hexagon.sidesAsString());
             }
             rows.push(hexagons.join("h"));
         }
@@ -57,8 +57,8 @@ export class Board{
     updateSideLength(sideLength){
         for(let row of this.hexagons){
             for(let hexagon of row){
-                hexagon.outerSideLength = sideLength;
-                hexagon.refreshPosition();
+                let newLocation = calculateWorldCords(hexagon.data.gridCords, sideLength);
+                hexagon.refreshPositon(newLocation.x, newLocation.y, boardSettings.spaceFactor*sideLength);
             }
         }
         for(let combinedSide of this.combinedSides){
@@ -134,13 +134,34 @@ function parseRowString(rowString, sideLength, x, game){
 }
 
 function parseHexString(hexagonString, sideLength, cords, game){
-    let sides = hexagonString.split(":");
+    let sides = [];
+    for(let side of hexagonString.split(":")){
+        sides.push(teamInfo.teams[side]);
+    }
     if(sides.length !== 6){
         console.log("invalid map string hexagon");
         console.log(hexagonString);
     }
-    let hexagon = new Hexagon(sideLength, cords, game, sides);
-    hexagon.drawSides();
+    let worldCords = calculateWorldCords(cords, sideLength);
+    let hexagon = new Hexagon(game, worldCords.x, worldCords.y, boardSettings.spaceFactor*sideLength, cords, sides, function(clickedHexagon){
+        clickedHexagon.rotate(1);
+    });
+    game.add.existing(hexagon);
     return hexagon;
 
+}
+
+function calculateWorldCords(gridCords, spacingSideLength){
+    let ySpacing = 2*Math.sin(Math.PI/3)*spacingSideLength;
+    let xSpacing = spacingSideLength*1.5;
+    //plus ones so we don't get cut off by edge of map
+    let position =  {
+        x: (xSpacing*gridCords.x)+spacingSideLength,
+        y: (ySpacing*gridCords.y)+(2*Math.sin(Math.PI/3)*spacingSideLength)
+    };
+    let isOddColumn = gridCords.x%2==1;
+    if(isOddColumn){
+        position.y -= ySpacing/2;
+    }
+    return position;
 }
