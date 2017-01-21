@@ -14,8 +14,9 @@ export function boardSettingsGui(gui, game){
 
 
 export class Board{
-    constructor(game, dataString, sideLength){
-        this.hexagons = parseDataString(dataString, sideLength, game);
+    //passing in x is even more reason to make this a phaser object
+    constructor(game, dataString, sideLength, xOffset){
+        this.hexagons = parseDataString(dataString, sideLength, game, xOffset);
         this.combinedSides = createCombinedLines(game, this.hexagons, sideLength);
     }
 
@@ -115,25 +116,31 @@ function createCombinedLines(game, hexagons, sideLength){
     return combinedSides;
 }
 
-function parseDataString(string, sideLength, game){
+//is this better defined as hexagon class method?
+function hexagonInput(clickedHexagon){
+    teamInfo.makeMove();
+    clickedHexagon.rotate(1);
+}
+
+function parseDataString(string, sideLength, game, xOffset){
     let hexagons = [];
     for(let [x, rowData] of string.split("r").entries()){
-        let row = parseRowString(rowData, sideLength, x, game);
+        let row = parseRowString(rowData, sideLength, x, game, xOffset);
         hexagons.push(row);
     }
     return hexagons;
 }
 
-function parseRowString(rowString, sideLength, x, game){
+function parseRowString(rowString, sideLength, x, game, xOffset){
     let current_row = [];
     for(let [y, hexagonData] of rowString.split("h").entries()){
-        let hexagon = parseHexString(hexagonData, sideLength, {x: x, y: y}, game);
+        let hexagon = parseHexString(hexagonData, sideLength, {x: x, y: y}, game, xOffset);
         current_row.push(hexagon);
     }
     return current_row;
 }
 
-function parseHexString(hexagonString, sideLength, cords, game){
+function parseHexString(hexagonString, sideLength, cords, game, xOffset){
     let sides = [];
     for(let side of hexagonString.split(":")){
         sides.push(teamInfo.teams[side]);
@@ -143,9 +150,7 @@ function parseHexString(hexagonString, sideLength, cords, game){
         console.log(hexagonString);
     }
     let worldCords = calculateWorldCords(cords, sideLength);
-    let hexagon = new Hexagon(game, worldCords.x, worldCords.y, boardSettings.spaceFactor*sideLength, cords, sides, function(clickedHexagon){
-        clickedHexagon.rotate(1);
-    });
+    let hexagon = new Hexagon(game, worldCords.x+xOffset, worldCords.y, boardSettings.spaceFactor*sideLength, cords, sides, hexagonInput);
     game.add.existing(hexagon);
     return hexagon;
 

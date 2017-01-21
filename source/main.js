@@ -9,9 +9,9 @@ import dat from "dat-gui";
 import {hexagonSettingsGui} from "./hexagon.js";
 import {combinedSideSettingsGui} from "./combinedSide.js";
 import {boardSettingsGui, Board} from "./board.js";
-import {teamInfoSettingsGui, teams} from "./teamInfo.js";
+import {teamInfoSettingsGui, teams, currentTeam} from "./teamInfo.js";
 import * as sideGeneration from "./sideGeneration.js";
-//import * as dashboard from "./dashboard.js";
+import * as dashboard from "./dashboard.js";
 
 //this doesnt work properly
 function calculateSideLength(width, height, gridWidth, gridHeight){
@@ -30,6 +30,7 @@ let globalParams = {
     gridWidth: 2,
     gridHeight: 2,
     sideGeneration: "random",//be nice to store function directly here but doesn't play nice with dat-gui,
+    dashBoardWidth: window.innerWidth/10
 };
 
 globalParams.sideLength = calculateSideLength(globalParams.width, globalParams.height, globalParams.gridWidth, globalParams.gridHeight);
@@ -37,8 +38,8 @@ globalParams.sideLength = calculateSideLength(globalParams.width, globalParams.h
 function onCreate(game) {
     let settingsGui = new dat.GUI();
     game.stage.backgroundColor = "#000000";//consider grey because less contrast
-    game.board = buildBoard(game);
-    //game.dashboard = new dashboard.Dashboard(game, 50, 50);
+    game.board = buildBoard(game, globalParams.dashBoardWidth, game.width-globalParams.dashBoardWidth);
+    game.dashboard = new dashboard.Dashboard(game, 0, 0, globalParams.dashBoardWidth);
     settingsGui.addColor(game.stage, 'backgroundColor');
     settingsGui.add(globalParams, 'width', 0, window.innerWidth).onFinishChange(function(newWidth){
         game.scale.setGameSize(newWidth, game.height);
@@ -62,19 +63,22 @@ function onCreate(game) {
     settingsGui.add(globalParams, 'dataString').onFinishChange(function(newDataString){
         game.recreateBoard = true;
     });
+    settingsGui.add(globalParams, 'dashBoardWidth', 0, window.innerWidth).onFinishChange(function(newWidth){
+        game.recreateBoard = true;
+    });
     boardSettingsGui(settingsGui, game);
     hexagonSettingsGui(settingsGui);
     combinedSideSettingsGui(settingsGui);
     teamInfoSettingsGui(settingsGui);
 }
 
-function buildBoard(game, boardData){
+function buildBoard(game, x, width, boardData){
     if(globalParams.sideGeneration !== "dataString"){
         let generationFunction = sideGeneration.mappingForDatGui.get(globalParams.sideGeneration);
         boardData = generationFunction(teams, globalParams.gridWidth, globalParams.gridHeight);
-        globalParams.sideLength = calculateSideLength(globalParams.width, globalParams.height, globalParams.gridWidth, globalParams.gridHeight);
+        globalParams.sideLength = calculateSideLength(width, globalParams.height, globalParams.gridWidth, globalParams.gridHeight);
     }
-    let board = new Board(game, boardData, globalParams.sideLength);
+    let board = new Board(game, boardData, globalParams.sideLength, x);
     globalParams.dataString = board.dataString;
     globalParams.sideGeneration = "dataString";
     return board;
@@ -84,12 +88,14 @@ function update(game){
     //so it's not destory mid update
     //this is why our classes should extend phases, so we don't have to deal with this stuff
     if(game.recreateBoard){
+        game.dashboard.destroy();
+        game.dashboard = new dashboard.Dashboard(game, 0, 0, globalParams.dashBoardWidth);
         game.board.destroy();
-        game.board = buildBoard(game, globalParams.dataString);
+        game.board = buildBoard(game, globalParams.dashBoardWidth, game.width-globalParams.dashBoardWidth, globalParams.dataString);
         game.recreateBoard = false;
     }
     game.board.update();
-    //game.dashboard.draw(teams[0], 2,3);
+    game.dashboard.draw(currentTeam);
 }
 
 window.onload = function() {
