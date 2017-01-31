@@ -15,4 +15,9 @@ Vagrant.configure("2") do |config|
 
   config.vm.provision "shell", path: "provision.sh"
 
+  config.vm.provider "virtualbox" do |v|
+      v.memory = 2048
+      v.cpus = 1
+  end
+
 end
