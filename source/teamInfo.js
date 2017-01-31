@@ -25,6 +25,9 @@ export function teamInfoSettingsGui(gui){
     gui.addColor(teams[0], 'colour');
     gui.addColor(teams[1], 'colour');
     gui.addColor(teams[2], 'colour');
+    gui.add(teams[0], 'moveLimit', 1, 10).step(1);
+    gui.add(teams[1], 'moveLimit', 1, 10).step(1);
+    gui.add(teams[2], 'moveLimit', 1, 10).step(1);
 }
 
 export let currentTeam = teams[0];
