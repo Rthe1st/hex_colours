@@ -10,8 +10,8 @@ gulp.task('clientScripts', function(){
      return browserify({
         entries: ['./source/main.js'],
         debug: true,// Gives us sourcemapping
-        transform: [babelify]
-    }).bundle()
+    }).transform(babelify)
+    .bundle()
     .pipe(vinylSourceStream('bundle.js'))
     .pipe(gulp.dest(buildDir));
 });

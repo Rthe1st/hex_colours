@@ -5,7 +5,7 @@
 //window.p2 = require( 'phaser/build/custom/p2' );
 //window.Phaser = require( 'phaser/build/custom/phaser-split' );
 
-import dat from "dat-gui";
+import * as dat from "exdat";//browserify doesn't like dat.gui, plus I don't think the repos from the maintainer anyway
 import {hexagonSettingsGui} from "./views/hexagon.js";
 import {combinedSideSettingsGui} from "./views/combinedSide.js";
 import {boardSettingsGui, Board as BoardView} from "./views/board.js";
