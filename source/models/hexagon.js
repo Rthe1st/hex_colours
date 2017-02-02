@@ -4,15 +4,14 @@ export class Hexagon{
     constructor(gridCords, sides){
         this.combinedSides = new Map();
         this.gridCords = gridCords;
+        if(sides.length != 6){
+            throw new Error("incorrect number of sides: " + sides.length);
+        }
         this.sides = sides;
     }
 
-    getCombinedSide(side){
-        return this.combinedSides.get(side);
-    }
-
-    setCombinedSide(side, combinedSide){
-        this.combinedSides.set(side, combinedSide);
+    side(number){
+        return this.sides[number];
     }
 
     sidesAsString(){
@@ -27,7 +26,8 @@ export class Hexagon{
         amount = amount % 6;
         //for anti-clockwise
         if(amount < 0){
-            amount = 6-amount;
+            let absoluteAmount = amount*-1;
+            amount = 6-absoluteAmount;
         }
         for(let i=0;i<amount;i++){
             this.sides.unshift(this.sides.pop());

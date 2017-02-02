@@ -16,22 +16,3 @@ test('getAdjacentHexagonOffset', t => {
     t.deepEqual({x: -1, y: 1}, gridNavigation.getAdjacentHexagonOffset(2, 4), "even y, side 4");
     t.deepEqual({x: -1, y: 0}, gridNavigation.getAdjacentHexagonOffset(2, 5), "even y, side 5");
 });
-
-test('oppositeHexagon', t => {
-    t.deepEqual(new gridNavigation.CombinedSideCord(1, 0, 3), gridNavigation.oppositeHexagon(new gridNavigation.CombinedSideCord(1,1,0)), "");
-    t.deepEqual(new gridNavigation.CombinedSideCord(2, 1, 1), gridNavigation.oppositeHexagon(new gridNavigation.CombinedSideCord(3,1,4)), "");
-    t.deepEqual(new gridNavigation.CombinedSideCord(5, 3, 5), gridNavigation.oppositeHexagon(new gridNavigation.CombinedSideCord(4, 2, 2)), "");
-    let examples = [
-        {x: 1, y: 1},
-        {x: 2, y: 1},
-        {x: 500, y: 245}/*,
-        {x: -10, y: 30},
-        {x: 10, y: -20}*/
-    ];
-    for(let example of examples){
-        for(let side = 0; side <= 5; side++){
-            let combinedSideCord = new gridNavigation.CombinedSideCord(example.x, example.y, side);
-            t.deepEqual(combinedSideCord, new gridNavigation.oppositeHexagon(gridNavigation.oppositeHexagon(combinedSideCord)), "opposite of opposite should be the orignal");
-        }
-    }
-});

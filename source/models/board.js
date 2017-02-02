@@ -11,6 +11,33 @@ export class Board{
         //score.score(this);
     }
 
+    getHex(x, y){
+        if(!this.hexagonExists(x,y)){
+            return undefined;
+        }else{
+            return this.hexagons[x][y];
+        }
+    }
+
+    getCombinedSide(combinedSideCord){
+        //any combinedSide has 2 valid cords, one for each (x,y,side) that make it up
+        //really we want a Map class with custom equality operator from combinedSideCord
+        let otherCord = this.oppositeHexagon(combinedSideCord);
+        for(let potentialCord of [combinedSideCord, otherCord]){
+            let row = this.combinedSides.get(potentialCord.x);
+            if(row !== undefined){
+                let hex = row.get(potentialCord.y);
+                if(hex !== undefined){
+                    let combinedSide = hex.get(potentialCord.side);
+                    if(combinedSide !== undefined){
+                        return combinedSide;
+                    }
+                }
+            }
+        }
+        return undefined;
+    }
+
     get hexArray(){
         let hexArray = [];
         for(const hexRow of this.hexagons){
@@ -19,11 +46,16 @@ export class Board{
         return hexArray;
     }
 
-    combinedSide(combinedSideCord){
-        //this is insane
-        //at minimum, hexagons should contain references to their combinedSides
-        //to ease look up
-        return this.hexagons[combinedSideCord.x][combinedSideCord.y];
+    get combinedSidesArray(){
+        let array = [];
+        for(const row of this.combinedSides.values()){
+            for(const xy of row.values()){
+                for(const combinedSide of xy.values()){
+                    array.push(combinedSide);
+                }
+            }
+        }
+        return array;
     }
 
     get dataString(){
@@ -95,15 +127,15 @@ export class Board{
         }
 
         let primaryOffset = gridNavigation.getAdjacentHexagonOffset(combinedSideCord.y, hexToHexSide);
-        let primaryCombCords = new gridNavigation.CombinedSideCord(combinedSideCord.x+primaryOffset.x, combinedSideCord.y+primaryOffset.y, hexToCombSide);
+        let primaryCombCords = getCombinedSide(combinedSideCord.x+primaryOffset.x, combinedSideCord.y+primaryOffset.y, hexToCombSide);
 
         //every combinedSide actual has 2 potential valid co-ordinates, depending on which of it's adjacent hexagons is used
         //both potential ones are opposite each other (share a side)
         //we try both and return whichever exists
-        let secondaryCombCords = gridNavigation.oppositeHexagon(primaryCombCords);
-        if(this.hexagonExists(primaryCombCords.x, primaryCombCords.y)){
+        let secondaryCombCords = this.oppositeHexagon(primaryCombCords);
+        if(primaryCombCords !== undefined){
             return primaryCombCords;
-        }else if(this.hexagonExists(secondaryCombCords.x, secondaryCombCords.y)){
+        }else if(secondaryCombCords !== undefined){
             return secondaryCombCords;
         }else{
             return false;
@@ -113,9 +145,11 @@ export class Board{
     //could this be simplified if we stuck an extra boarder of "non-move" hexagons round the edge?
     //to make side calcs simplifer
     createCombinedLines(hexagons){
-        let combinedSides = [];
+        let combinedSides = new Map();
         for(let x = 0; x < hexagons.length; x++){
+            combinedSides.set(x, new Map());
             for(let y = 0; y < hexagons[x].length; y++){
+                combinedSides.get(x).set(y, new Map());
                 let centerHexagon = hexagons[x][y];
                 for(let sideNumber = 0; sideNumber < 6; sideNumber++){
                     let hexInfo = [{
@@ -133,11 +167,8 @@ export class Board{
                                side: (sideNumber + 3) % 6
                            });
                         }
-                        let combinedSide = new CombinedSide(hexInfo, {x: x, y: y, side: sideNumber});
-                        for(let info of hexInfo){
-                            info.hexagon.setCombinedSide(info.side, combinedSide);
-                        }
-                        combinedSides.push(combinedSide);
+                        let combinedSide = new CombinedSide({x: x, y: y, side: sideNumber}, this);
+                        combinedSides.get(x).get(y).set(sideNumber, combinedSide);
                     }
                 }
             }
@@ -150,6 +181,12 @@ export class Board{
         teamInfo.makeMove();
         clickedHexagon.data.model.rotate(1);
     }
+
+    oppositeHexagon(combinedSideCord){
+        let oppositeOffset = gridNavigation.getAdjacentHexagonOffset(combinedSideCord.x, combinedSideCord.side);
+        return getCombinedSide(combinedSideCord.x + oppositeOffset.x, combinedSideCord.y + oppositeOffset.y, (combinedSideCord.side+3)%6);
+    }
+
 }
 
 function parseDataString(string){

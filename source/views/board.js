@@ -22,7 +22,7 @@ export class Board extends Phaser.Sprite{
             this.hexagons.push(hexagon);
         }
         this.combinedSides = [];
-        for(let combModel of model.combinedSides){
+        for(let combModel of model.combinedSidesArray){
             let worldCords = this.calculateWorldCords(combModel.cords);
             let combinedSide = new CombinedSide(game, worldCords.x, worldCords.y, this, combModel);
             this.addChild(combinedSide);
