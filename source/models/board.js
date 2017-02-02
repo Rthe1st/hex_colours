@@ -127,19 +127,12 @@ export class Board{
         }
 
         let primaryOffset = gridNavigation.getAdjacentHexagonOffset(combinedSideCord.y, hexToHexSide);
-        let primaryCombCords = getCombinedSide(combinedSideCord.x+primaryOffset.x, combinedSideCord.y+primaryOffset.y, hexToCombSide);
-
-        //every combinedSide actual has 2 potential valid co-ordinates, depending on which of it's adjacent hexagons is used
-        //both potential ones are opposite each other (share a side)
-        //we try both and return whichever exists
-        let secondaryCombCords = this.oppositeHexagon(primaryCombCords);
-        if(primaryCombCords !== undefined){
-            return primaryCombCords;
-        }else if(secondaryCombCords !== undefined){
-            return secondaryCombCords;
-        }else{
-            return false;
-        }
+        let newCombinedSideCord = {
+            x: combinedSideCord.x+primaryOffset.x,
+            y: combinedSideCord.y+primaryOffset.y,
+            side: hexToCombSide
+        };
+        return getCombinedSide(combinedSideCord);
     }
 
     //could this be simplified if we stuck an extra boarder of "non-move" hexagons round the edge?
