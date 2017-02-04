@@ -4,7 +4,7 @@ apt-get install -y nodejs
 npm install gulp --global
 npm install ava --global
 cd /vagrant
-npm install /vagrant --only=dev
+npm install /vagrant --no-bin-link
 #--manual steps:
 #cd /vagrant
 #----run tests

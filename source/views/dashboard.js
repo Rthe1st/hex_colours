@@ -12,15 +12,17 @@ export class Dashboard extends Phaser.Sprite{
         this.outline();
         this.data.teamsDisplay = [];
         for(let [index, team] of teamInfo.teams.entries()){
-            let teamDisplayGroup = this.teamHighlights(team, index*50, 50, 30, 30);
+            let teamDisplayGroup = this.teamHighlights(team, index*50, 70, 30, 30);
             this.data.teamsDisplay.push(teamDisplayGroup);
             this.addChild(teamDisplayGroup);
         }
         this.data.boardModel = boardModel;
         this.moveCounter = new Phaser.Graphics(game, 0, this.data.height/2);
         this.addChild(this.moveCounter);
-        this.data.highlighedSectionScore = new Phaser.Text(game, 0, 10, "", {wordWrap: true, wordWrapWidth: width, fontSize: 15});
-        this.addChild(this.data.highlighedSectionScore);
+        this.data.highlightedSectionScore = new Phaser.Text(game, 0, 10, "", {wordWrap: true, wordWrapWidth: width, fontSize: 15});
+        this.addChild(this.data.highlightedSectionScore);
+        this.data.highlightedSectionScoreBonus = new Phaser.Text(game, 0, 40, "", {wordWrap: true, wordWrapWidth: width, fontSize: 15});
+        this.addChild(this.data.highlightedSectionScoreBonus);
     }
 
     teamHighlights(team, x, y, width, height){
@@ -56,12 +58,16 @@ export class Dashboard extends Phaser.Sprite{
         }
         this.moveCounter.clear();
         let score;
+        let bonus;
         if(this.data.boardModel.selected === undefined){
             score = 0;
+            bonus = 0;
         }else{
             score = this.data.boardModel.selected.score;
+            bonus = this.data.boardModel.selected.sizeBonus;
         }
-        this.data.highlighedSectionScore.text = "Highlighted Score: " + score;
+        this.data.highlightedSectionScore.text = "Highlighted Score: " + score;
+        this.data.highlightedSectionScoreBonus.text = "Size Bonus: " + bonus;
         const currentTeam = this.data.teamInfo.currentTeam;
         const moveLimit = this.data.teamInfo.settings.standardMoveLimit;
         this.moveCounter.beginFill(currentTeam.colour);

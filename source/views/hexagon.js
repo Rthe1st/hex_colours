@@ -45,6 +45,8 @@ export class Hexagon extends Phaser.Sprite{
             this.data.sides.push(sideView);
         }
         this.data.text = new Phaser.Text(game, -10, -10, this.data.model.gridCords.x + "," + this.data.model.gridCords.y);
+        this.data.text.font = "arial";
+        this.data.text.fontSize = 8;
         //look at adding this to a group/image class with the graphics object
         this.addChild(this.data.text);
     }
@@ -81,7 +83,10 @@ export class Hexagon extends Phaser.Sprite{
         this.data.body.beginFill(hexStyle.colour);
         this.data.body.drawPolygon(geometry.relativeScaledHexPoints(this.data.boardView.innerSideLength));
         this.data.body.endFill();
-        this.data.text.font = "arial";
-        this.data.text.fontSize = 8;
+        if(this.data.model.isHome){
+            this.data.body.beginFill('0x0066ff');
+            this.data.body.drawCircle(0,0, 20);
+            this.data.body.endFill();
+        }
     }
 }

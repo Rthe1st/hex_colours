@@ -20,7 +20,7 @@ function createBoard(game, dataString){
         let generationFunction = sideGeneration.mappingForDatGui.get(globalParams.sideGeneration);
         dataString = generationFunction(teamInfo.teams, globalParams.gridWidth, globalParams.gridHeight);
     }
-    let boardModel = new BoardModel(dataString);
+    let boardModel = new BoardModel(dataString, "normal", game.settingsGui);
     globalParams.dataString = boardModel.dataString;
     globalParams.sideGeneration = "dataString";
     let boardView = new BoardView(game, 0, 0, boardModel, game.settingsGui);
@@ -51,7 +51,7 @@ function globalSettingsGui(settingsGui, game){
     let mapFolder = settingsGui.addFolder('map setup');
     mapFolder.add(globalParams, 'gridWidth', 0).step(1);
     mapFolder.add(globalParams, 'gridHeight', 0).step(1);
-    mapFolder.add(globalParams, 'sideGeneration', ["random", "even", "dataString"]).listen().onFinishChange(function(genMethod){
+    mapFolder.add(globalParams, 'sideGeneration', ["random", "even", "evenRandom", "dataString"]).listen().onFinishChange(function(genMethod){
         game.boardView.destroy();
         createBoard(game);
     });

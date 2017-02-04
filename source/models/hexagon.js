@@ -4,9 +4,17 @@ import {SingleSide} from "./SingleSide.js";
 export class Hexagon{
     constructor(dataString, gridCords, board){
         this.sides = [];
-        for(let side of dataString.split(":")){
-            let team = teams[side];
-            this.sides.push(new SingleSide(team, this, board));
+        if(dataString[0] == "!"){
+            this.isHome = true;
+            this.team = teams[dataString[1]];
+            for(let sideCount = 0; sideCount < 6; sideCount++){
+                this.sides.push(new SingleSide(this.team, this, board));
+            }
+        }else{
+            for(let side of dataString.split(":")){
+                let team = teams[side];
+                this.sides.push(new SingleSide(team, this, board));
+            }
         }
         if(this.sides.length != 6){
             throw new Error("incorrect number of sides: " + sides.length);
@@ -29,11 +37,15 @@ export class Hexagon{
     }
 
     sidesAsString(){
-        let sides = [];
-        for(let side of this.sides){
-            sides.push(side.asString);
+        if(this.isHome){
+            return "!" + this.team.number;
+        }else{
+            let sides = [];
+            for(let side of this.sides){
+                sides.push(side.asString);
+            }
+            return sides.join(":");
         }
-        return sides.join(":");
     }
 
     rotate(amount){
