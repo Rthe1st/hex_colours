@@ -2,52 +2,26 @@ import test from 'ava';
 
 import {Hexagon} from '../../source/models/hexagon.js';
 
+let mockBoard = {};
+
 test('constructor', t => {
-    let sides = [
-        {number: -19},{number: 20},{number: 4},
-        {number: 1},{number: 0}
-    ];
     t.throws(() => {
-        new Hexagon({x: 1, y: 2}, sides);
+        new Hexagon("-19:20:4:1:0", {x: 1, y: 2}, mockBoard);
     });
-    sides = [
-        {number: -19},{number: 20},{number: 4},
-        {number: 1},{number: 0}, {number:1}, {number: 2}
-    ];
     t.throws(() => {
-        new Hexagon({x: 1, y: 2}, sides);
+        new Hexagon("-19:20:4:1:0:1:2", {x: 1, y: 2}, mockBoard);
     });
 });
 
 test('sidesAsString', t => {
-    let sides = [
-        {number: 0},{number: 1},{number: 2},
-        {number: 0},{number: 2},{number: 1}
-    ];
-    t.is(new Hexagon({x: 0, y: 0}, sides).sidesAsString(), '0:1:2:0:2:1');
-    sides = [
-        {number: 0},{number: 1},{number: 2},
-        {number: 0},{number: 2},{number: 1}
-    ];
-    t.is(new Hexagon({x: 1, y: 2}, sides).sidesAsString(), '0:1:2:0:2:1');
-    sides = [
-        {number: 0},{number: 0},{number: 0},
-        {number: 0},{number: 0},{number: 0}
-    ];
-    t.is(new Hexagon({x: 1, y: 2}, sides).sidesAsString(), '0:0:0:0:0:0');
-    sides = [
-        {number: -19},{number: 20},{number: 4},
-        {number: 1},{number: 0},{number: 23}
-    ];
-    t.is(new Hexagon({x: 1, y: 2}, sides).sidesAsString(), '-19:20:4:1:0:23');
+    t.is(new Hexagon('0:1:2:0:2:1', {x: 0, y: 0}, mockBoard).sidesAsString(), '0:1:2:0:2:1');
+    t.is(new Hexagon('0:1:2:0:2:1', {x: 1, y: 2}, mockBoard).sidesAsString(), '0:1:2:0:2:1');
+    t.is(new Hexagon('0:0:0:0:0:0', {x: 1, y: 2}, mockBoard).sidesAsString(), '0:0:0:0:0:0');
+    t.is(new Hexagon('2:0:1:1:0:1', {x: 1, y: 2}, mockBoard).sidesAsString(), '2:0:1:1:0:1');
 });
 
 test('rotation', t => {
-    let sides = [
-        {number: 0},{number: 1},{number: 2},
-        {number: 0},{number: 2},{number: 1}
-    ];
-    let hexagon = new Hexagon({x: 0, y: 0}, sides);
+    let hexagon = new Hexagon('0:1:2:0:2:1', {x: 0, y: 0}, mockBoard);
     hexagon.rotate(1);
     t.is(hexagon.sidesAsString(), '1:0:1:2:0:2', "1");
     hexagon.rotate(-1);

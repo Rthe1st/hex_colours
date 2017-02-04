@@ -16,3 +16,9 @@ test('getAdjacentHexagonOffset', t => {
     t.deepEqual({x: -1, y: 1}, gridNavigation.getAdjacentHexagonOffset(2, 4), "even y, side 4");
     t.deepEqual({x: -1, y: 0}, gridNavigation.getAdjacentHexagonOffset(2, 5), "even y, side 5");
 });
+
+test('getAdjacentHexagonCord', t => {
+    t.deepEqual(gridNavigation.getAdjacentHexagonCord({x: 0, y: 0, side: 0}), {x: 0, y: -1, side: 3});
+    t.deepEqual(gridNavigation.getAdjacentHexagonCord({x: 0, y: -1, side: 3}), {x: 0, y: 0, side: 0});
+    t.deepEqual(gridNavigation.getAdjacentHexagonCord({x: 10, y: 20, side: 0}), {x: 10, y: 19, side: 3});
+});

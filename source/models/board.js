@@ -2,13 +2,13 @@ import {Hexagon} from "./hexagon.js";
 import {CombinedSide} from "./combinedSide.js";
 import * as teamInfo from "../teamInfo.js";
 import * as gridNavigation from "../gridNavigation.js";
+import * as score from '../score.js';
 
 export class Board{
     //passing in x is even more reason to make this a phaser object
     constructor(dataString){
-        this.hexagons = parseDataString(dataString);
+        this.hexagons = this.parseDataString(dataString);
         this.combinedSides = this.createCombinedLines(this.hexagons);
-        //score.score(this);
     }
 
     getHex(x, y){
@@ -19,10 +19,31 @@ export class Board{
         }
     }
 
+    get gridWidth(){
+        if(this.hexagons.length === 0){
+            return 0;
+        }else{
+            return this.hexagons[0].length;
+        }
+    }
+
+    get gridHeight(){
+        return this.hexagons.length;
+    }
+
+    selectSection(singleSide){
+        let connectionSet = score.getConnectionSet(singleSide, singleSide.team, this);
+        this.selected = connectionSet;
+    }
+
+    teamHighlight(team){
+        this.selected = score.allTeamScore(this, team);
+    }
+
     getCombinedSide(combinedSideCord){
         //any combinedSide has 2 valid cords, one for each (x,y,side) that make it up
         //really we want a Map class with custom equality operator from combinedSideCord
-        let otherCord = this.oppositeHexagon(combinedSideCord);
+        let otherCord = gridNavigation.getAdjacentHexagonCord(combinedSideCord);
         for(let potentialCord of [combinedSideCord, otherCord]){
             let row = this.combinedSides.get(potentialCord.x);
             if(row !== undefined){
@@ -100,39 +121,30 @@ export class Board{
          the numbering is relative, so spokes -2 and +2 are always sides of the central hexagon
          even as side number changes.
          */
+         let newCord;
+         if(direction === -2){
+            newCord = {
+                 x: combinedSideCord.x,
+                 y: combinedSideCord.y,
+                 side: (combinedSideCord.side - 1 + 6)%6 //+6 to stop negaatives
+             };
+         }else if(direction === +2){
+             newCord = {
+                 x: combinedSideCord.x,
+                 y: combinedSideCord.y,
+                 side: (combinedSideCord.side + 1)%6
+             };
+         }else if(direction === -1){
+             newCord = gridNavigation.getAdjacentHexagonCord(combinedSideCord);
+             newCord.side = (newCord.side + 1)%6;
+         }else if(direction === +1){
+              newCord = gridNavigation.getAdjacentHexagonCord(combinedSideCord);
+              newCord.side = (newCord.side - 1 + 6)%6; //+6 to stop negaatives
+          }else{
+              throw new Error("invalid direction supplied " + direction);
+          }
 
-         //this is a confuesing api is your not aware of the internals
-         //0-3 might be better?
-         if(!([-1,-2,+1,+2].includes(direction))){
-             console.log("invalid direction supplied");
-             console.log(direction);
-         }
-
-        //each of these combined sides border a hex adjacent to the supplied one
-        //we find that hex and the side it shares with the combined side
-        let hexToHexSide;
-        if(direction == -1 || direction == -2){
-            //+6 in case its negative
-            hexToHexSide = ((combinedSideCord.side-1+6)%6);
-        }else if(direction == +1){
-            hexToHexSide = (combinedSideCord.side)%6;
-        }else if(direction == +2){
-            hexToHexSide = (combinedSideCord.side+1)%6;
-        }
-
-        if(direction == -2 || direction == +2){
-            let hexToCombSide = (hexToHexSide+3)%6;
-        }else if(direction == -1 || direction == +1){
-            let hexToCombSide = (hexToHexSide-1)%6;
-        }
-
-        let primaryOffset = gridNavigation.getAdjacentHexagonOffset(combinedSideCord.y, hexToHexSide);
-        let newCombinedSideCord = {
-            x: combinedSideCord.x+primaryOffset.x,
-            y: combinedSideCord.y+primaryOffset.y,
-            side: hexToCombSide
-        };
-        return getCombinedSide(combinedSideCord);
+          return this.getCombinedSide(newCord);
     }
 
     //could this be simplified if we stuck an extra boarder of "non-move" hexagons round the edge?
@@ -149,8 +161,7 @@ export class Board{
                         hexagon: centerHexagon,
                         side: sideNumber
                     }];
-                    let adjacentHexOffset = gridNavigation.getAdjacentHexagonOffset(x, sideNumber);
-                    let hexagon2Coordinates = {x: x + adjacentHexOffset.x, y: y + adjacentHexOffset.y};
+                    let hexagon2Coordinates = gridNavigation.getAdjacentHexagonCord({x: x, y: y, side: sideNumber});
                     let hexagon2Exists = this.hexagonExists(hexagon2Coordinates.x, hexagon2Coordinates.y);
                     //sides numbered above 3 are covered when we iterate over the other hexagon (so we don't create every combine twice)
                     if(!hexagon2Exists || sideNumber < 3){
@@ -173,41 +184,24 @@ export class Board{
     hexagonInput(clickedHexagon){
         teamInfo.makeMove();
         clickedHexagon.data.model.rotate(1);
+        if(teamInfo.endOfRound()){
+            for(let team of teamInfo.teams){
+                team.score += score.allTeamScore(this, team).score;
+            }
+        }
     }
 
-    oppositeHexagon(combinedSideCord){
-        let oppositeOffset = gridNavigation.getAdjacentHexagonOffset(combinedSideCord.x, combinedSideCord.side);
-        return getCombinedSide(combinedSideCord.x + oppositeOffset.x, combinedSideCord.y + oppositeOffset.y, (combinedSideCord.side+3)%6);
+    parseDataString(string){
+        let hexagons = [];
+        for(let [x, rowData] of string.split("r").entries()){
+            let row = [];
+            for(let [y, hexagonData] of rowData.split("h").entries()){
+                let hexagon = new Hexagon(hexagonData, {x: x, y: y}, this);
+                row.push(hexagon);
+            }
+            hexagons.push(row);
+        }
+        return hexagons;
     }
 
-}
-
-function parseDataString(string){
-    let hexagons = [];
-    for(let [x, rowData] of string.split("r").entries()){
-        let row = parseRowString(rowData, x);
-        hexagons.push(row);
-    }
-    return hexagons;
-}
-
-function parseRowString(rowString, x){
-    let current_row = [];
-    for(let [y, hexagonData] of rowString.split("h").entries()){
-        let hexagon = parseHexString(hexagonData, {x: x, y: y});
-        current_row.push(hexagon);
-    }
-    return current_row;
-}
-
-function parseHexString(hexagonString, cords){
-    let sides = [];
-    for(let side of hexagonString.split(":")){
-        sides.push(teamInfo.teams[side]);
-    }
-    if(sides.length !== 6){
-        console.log("invalid map string hexagon");
-        console.log(hexagonString);
-    }
-    return new Hexagon(cords, sides);
 }

@@ -12,3 +12,12 @@ export function getAdjacentHexagonOffset(gridX, side){
     ];
     return adjacentHexOffset[side];
 }
+
+export function getAdjacentHexagonCord(cord){
+    let offset = getAdjacentHexagonOffset(cord.x, cord.side);
+    return {
+        x: cord.x + offset.x,
+        y: cord.y + offset.y,
+        side: (cord.side + 3) % 6
+    };
+}
