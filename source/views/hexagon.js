@@ -1,5 +1,6 @@
 import {teams} from "../teamInfo.js";
 import * as geometry from "../geometry.js";
+import {SingleSide} from "./SingleSide.js";
 
 let lineStyle = {
     thickness: 5,
@@ -11,9 +12,10 @@ let hexStyle = {
 };
 
 export function hexagonSettingsGui(gui){
-    gui.add(lineStyle, 'thickness', 0,20);
-    gui.add(lineStyle, 'alpha', 0, 1);
-    gui.addColor(hexStyle, 'colour');
+    let folder = gui.addFolder('hexagon graphics');
+    folder.add(lineStyle, 'thickness', 0,20);
+    folder.add(lineStyle, 'alpha', 0, 1);
+    folder.addColor(hexStyle, 'colour');
 }
 
 export class Hexagon extends Phaser.Sprite{
@@ -30,13 +32,18 @@ export class Hexagon extends Phaser.Sprite{
         this.inputEnabled = true;
         //this isn't pixle perfect, so use in conjuction with polygon hit test?
         //assuming box for this testi is too big, not too small
-        this.events.onInputDown.add(inputDownCallback);
+        this.events.onInputDown.add(inputDownCallback, this.data.boardView.data.model);
 
         this.data.body = new Phaser.Graphics(game, 0, 0);
         this.addChild(this.data.body);
 
-        this.data.sides = new Phaser.Graphics(game, 0, 0);
-        this.addChild(this.data.sides);
+        this.data.sides = [];
+
+        for(let sideModel of this.data.model.sides){
+            let sideView = new SingleSide(game, 0, 0, boardView, sideModel);
+            this.addChild(sideView);
+            this.data.sides.push(sideView);
+        }
         this.data.text = new Phaser.Text(game, -10, -10, this.data.model.gridCords.x + "," + this.data.model.gridCords.y);
         //look at adding this to a group/image class with the graphics object
         this.addChild(this.data.text);
@@ -50,8 +57,11 @@ export class Hexagon extends Phaser.Sprite{
 
     update(){
         this.refreshPositon();
-        this.drawSides();
+        //this.drawSides();
         this.drawHexagon();
+        for(let sideView of this.data.sides){
+            sideView.update();
+        }
     }
 
     drawSides(){

@@ -1,18 +1,3 @@
-export class CombinedSideCord{
-    constructor(x, y, side){
-        this.x = x;
-        this.y = y;
-        this.side = side;
-    }
-
-    equals(combinedSideCord){
-         let isSameCord = this.x === combinedSideCord.x && this.y === combinedSideCord.x && this.side === combinedSideCord.side;
-         let opposite = oppositeHexagon(this.x, this.y, this.side);
-         let isOppositeCord = opposite.x === combinedSideCord.x && opposite.y === combinedSideCord.x && opposite.side === combinedSideCord.side;
-         return isSameCord || isOppositeCord;
-    }
-}
-
 export function getAdjacentHexagonOffset(gridX, side){
     //even column: odd column: (a means adjacent, * means not)
     //*a*          aaa
@@ -28,7 +13,11 @@ export function getAdjacentHexagonOffset(gridX, side){
     return adjacentHexOffset[side];
 }
 
-export function oppositeHexagon(combinedSideCord){
-    let oppositeOffset = getAdjacentHexagonOffset(combinedSideCord.x, combinedSideCord.side);
-    return new CombinedSideCord(combinedSideCord.x + oppositeOffset.x, combinedSideCord.y + oppositeOffset.y, (combinedSideCord.side+3)%6);
+export function getAdjacentHexagonCord(cord){
+    let offset = getAdjacentHexagonOffset(cord.x, cord.side);
+    return {
+        x: cord.x + offset.x,
+        y: cord.y + offset.y,
+        side: (cord.side + 3) % 6
+    };
 }

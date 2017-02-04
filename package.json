@@ -17,16 +17,19 @@
     "esversion": 6
   },
   "dependencies": {
-    "dat-gui": "^0.5.0",
+    "exdat": "^0.6.2",
     "express": "4.10.0",
     "phaser": "^2.6.2"
   },
   "devDependencies": {
     "ava": "^0.17.0",
-    "babelify": "^6.1.0",
-    "browserify": "^10.2.0",
+    "babel-preset-latest": "^6.22.0",
+    "babel-register": "^6.22.0",
+    "babelify": "^7.3.0",
+    "browserify": "^14.0.0",
     "del": "^1.1.0",
     "gulp": "^3.9.1",
+    "gulp-ava": "^0.15.0",
     "gulp-util": "^3.0.0",
     "vinyl-source-stream": "^1.0.0"
   },
@@ -37,15 +40,17 @@
   ],
   "ava": {
     "files": [
-      "tests/*.js"
+      "tests/**/*.js"
     ],
-    "source": [
-        "source/*.js"
+    "require": [
+      "babel-register"
     ],
-    "concurrency": 5,
-    "failFast": true,
-    "require": ["babel-register"],
     "babel": "inherit"
+  },
+  "babel": {
+    "presets": [
+      "latest"
+    ]
   },
   "scripts": {
     "test": "ava"

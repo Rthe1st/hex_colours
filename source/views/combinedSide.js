@@ -12,11 +12,12 @@ let combinedColours = {
 };
 
 export function combinedSideSettingsGui(gui){
-    gui.add(lineStyle, 'thickness', 0,20);
-    gui.add(lineStyle, 'alpha', 0, 1);
-    gui.addColor(combinedColours, 'team_0_1');
-    gui.addColor(combinedColours, 'team_1_2');
-    gui.addColor(combinedColours, 'team_2_0');
+    let folder = gui.addFolder('combined side graphics');
+    folder.add(lineStyle, 'thickness', 0,20);
+    folder.add(lineStyle, 'alpha', 0, 1);
+    folder.addColor(combinedColours, 'team_0_1');
+    folder.addColor(combinedColours, 'team_1_2');
+    folder.addColor(combinedColours, 'team_2_0');
 }
 
 export class CombinedSide extends Phaser.Sprite{
@@ -29,18 +30,31 @@ export class CombinedSide extends Phaser.Sprite{
         super(game, x, y);
         this.data.boardView = boardView;
         this.data.model = model;
-        this.data.graphics = new Phaser.Graphics(game, 0, 0);
+        let hexPoints = geometry.relativeScaledHexPoints(this.data.boardView.outerSideLength);
+        let start = hexPoints[this.data.model.cords.side];
+        this.data.graphics = new Phaser.Graphics(game, start.x, start.y);
         this.addChild(this.data.graphics);
+        let end = hexPoints[(this.data.model.cords.side + 1) % 6];
+        let textPosition = {x: (start.x + end.x)/2, y: (start.y + end.y)/2};
+        this.data.text = new Phaser.Text(game, textPosition.x, textPosition.y, "");
+        this.addChild(this.data.text);
+        this.data.text.visible = false;
     }
 
     refreshPosition(){
         let worldCords = this.data.boardView.calculateWorldCords(this.data.model.cords);
         this.x = worldCords.x;
         this.y = worldCords.y;
+        let hexPoints = geometry.relativeScaledHexPoints(this.data.boardView.outerSideLength);
+        let start = hexPoints[this.data.model.cords.side];
+        this.data.graphics.x = start.x;
+        this.data.graphics.y = start.y;
     }
 
     update(){
         this.refreshPosition();
+        let externalTangentAngle = 60;
+        this.data.graphics.angle = externalTangentAngle*this.data.model.cords.side;
         this.data.graphics.clear();
         let hexSideTeams = this.data.model.hexSideTeams;
         let firstTeam = hexSideTeams[0];
@@ -51,12 +65,27 @@ export class CombinedSide extends Phaser.Sprite{
         }else{
             colour = firstTeam.colour;
         }
+        if(this.data.model.selected){
+            //this is gonna be a real resource drain
+            //should instead render to texture (6 different ones), then reapply
+            let steps = 10;
+            let maxThickness = lineStyle.thickness * 5;
+            let thicknessStep = (maxThickness - lineStyle.thickness)/steps;
+            let alpha = 1/steps;//these naturaly stack, so scaling with step is not needed
+            for(let step = 0; step < steps; step++){
+                this.data.graphics.lineStyle(lineStyle.thickness + (thicknessStep*step), 0xffffff, alpha);
+                this.data.graphics.moveTo(0, 0);
+                this.data.graphics.lineTo(this.data.boardView.outerSideLength, 0);
+            }
+            this.data.text.text = this.data.model.score;
+            this.data.text.visible = true;
+        }else{
+            this.data.text.visible = false;
+        }
+        //doing this last means it sits on top of the hightligh
         this.data.graphics.lineStyle(lineStyle.thickness, colour, lineStyle.alpha);
-        let hexPoints = geometry.relativeScaledHexPoints(this.data.boardView.outerSideLength);
-        let start = hexPoints[this.data.model.cords.side];
-        this.data.graphics.moveTo(start.x, start.y);
-        let end = hexPoints[(this.data.model.cords.side+1)%6];
-        this.data.graphics.lineTo(end.x, end.y);
+        this.data.graphics.moveTo(0, 0);
+        this.data.graphics.lineTo(this.data.boardView.outerSideLength, 0);
     }
 
     //this feels like its leaking the model a bit?
