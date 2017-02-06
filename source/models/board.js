@@ -4,11 +4,18 @@ import * as teamInfo from "../teamInfo.js";
 import * as gridNavigation from "../gridNavigation.js";
 import * as score from '../score.js';
 
+let settings = {
+    mode: 'home'
+};
+
 export class Board{
     //passing in x is even more reason to make this a phaser object
-    constructor(dataString){
+    constructor(dataString, mode, gui){
         this.hexagons = this.parseDataString(dataString);
         this.combinedSides = this.createCombinedLines(this.hexagons);
+        //settings.mode instead of this.mode is a horible hack
+        settings.mode = mode;
+        gui.add(settings, 'mode', ['home', 'normal']);
     }
 
     getHex(x, y){
@@ -37,7 +44,11 @@ export class Board{
     }
 
     teamHighlight(team){
-        this.selected = score.allTeamScore(this, team);
+        if(settings.mode == "home"){
+            this.selected = score.allTeamHomeMode(this, team);
+        }else{
+            this.selected = score.allTeamScore(this, team);
+        }
     }
 
     getCombinedSide(combinedSideCord){
@@ -186,7 +197,11 @@ export class Board{
         clickedHexagon.data.model.rotate(1);
         if(teamInfo.endOfRound()){
             for(let team of teamInfo.teams){
-                team.score += score.allTeamScore(this, team).score;
+                if(settings.mode == "home"){
+                    team.score += score.allTeamHomeMode(this, team).score;
+                }else{
+                    team.score += score.allTeamScore(this, team).score;
+                }
             }
         }
     }

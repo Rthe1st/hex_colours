@@ -1,8 +1,8 @@
 import * as gridNavigation from "./gridNavigation.js";
 import * as teamInfo from "./teamInfo.js";
 
-let boardSettings = {
-    spaceFactor: 0.6
+let scoreSettings = {
+    perSideBonus: 1
 };
 
 export function scoreSettingsGui(gui, game){
@@ -17,14 +17,64 @@ class ConnectionSet{
     get score(){
         let perSideBonus = 1;
         let score = 0;
-        //let count = 0;
+        let count = 0;
         for(let combinedSide of this.combinedSides){
             score += combinedSide.score;
-            //count += 1;
-            //score += perSideBonus * count;
+            score += scoreSettings.perSideBonus;
         }
         return score;
     }
+
+    get sizeBonus(){
+        return scoreSettings.perSideBonus*this.combinedSides.size;
+    }
+}
+
+class ConnectionSetGroup{
+    constructor(connectionSets){
+        this.connectionSets = connectionSets;
+    }
+
+    get combinedSides(){
+        let all = new Set();
+        for(let connectionSet of this.connectionSets){
+            all = new Set([...all, ...connectionSet.combinedSides]);
+        }
+        return all;
+    }
+
+    get score(){
+        let totalScore = 0;
+        for(let connectionSet of this.connectionSets){
+            totalScore += connectionSet.score;
+        }
+        return totalScore;
+    }
+
+    get sizeBonus(){
+        let totalScore = 0;
+        for(let connectionSet of this.connectionSets){
+            totalScore += connectionSet.sizeBonus;
+        }
+        return totalScore;
+    }
+}
+
+export function allTeamHomeMode(board, team){
+    let connectionSets = [];
+    let allSearchedSides = new Set();
+    for(let hex of board.hexArray){
+        if(hex.isHome && hex.team === team){
+            //all sides of a home belong to the same team
+            let startingSide = hex.side(0);
+            if(!allSearchedSides.has(startingSide)){
+                let newConnectionSet = getConnectionSet(startingSide, team, board);
+                connectionSets.push(newConnectionSet);
+                allSearchedSides = new Set([...allSearchedSides, ...newConnectionSet.combinedSides]);
+            }
+        }
+    }
+    return new ConnectionSetGroup(connectionSets);
 }
 
 export function allTeamScore(board, team){
@@ -39,7 +89,7 @@ export function allTeamScore(board, team){
             }
         }
     }
-    return new ConnectionSet(allSearchedSides);
+    return new ConnectionSetGroup(connectionSets);
 }
 
 function alreadyUsed(connects, combinedSide, board){

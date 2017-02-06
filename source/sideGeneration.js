@@ -1,6 +1,7 @@
 export let mappingForDatGui = new Map([
     ["random", random],
-    ["even", even]
+    ["even", even],
+    ["evenRandom", evenRandom]
 ]);
 
 function buildBoard(sideGenerator, gridWidth, gridHeight){
@@ -17,6 +18,31 @@ function buildBoard(sideGenerator, gridWidth, gridHeight){
         rows.push(hexagons.join("h"));
     }
     return rows.join("r");
+}
+
+export function evenRandomWithHomes(teams, gridWidth, gridHeight){
+    function sideGenerator(){
+        let sideSelection = [0,0,1,1,2,2];
+        let sides = [];
+        for(let sideNumber = 0; sideNumber < 6; sideNumber++){
+            sides.push(sideSelection[Math.floor(Math.random())%6]);
+        }
+        return sides;
+    }
+    return buildBoard(sideGenerator, gridWidth, gridHeight);
+}
+
+export function evenRandom(teams, gridWidth, gridHeight){
+    function sideGenerator(){
+        let sideSelection = [0,0,1,1,2,2];
+        let sides = [];
+        for(let sideNumber = 0; sideNumber < 6; sideNumber++){
+            let nextSide = sideSelection.splice(Math.floor(Math.random()*sideSelection.length)%sideSelection.length, 1);
+            sides.push(nextSide[0]);
+        }
+        return sides;
+    }
+    return buildBoard(sideGenerator, gridWidth, gridHeight);
 }
 
 export function random(teams, gridWidth, gridHeight){
