@@ -66,9 +66,9 @@ export function allTeamHomeMode(board, team){
     for(let hex of board.hexArray){
         if(hex.isHome && hex.team === team){
             //all sides of a home belong to the same team
-            let startingSide = hex.side(0);
-            if(!allSearchedSides.has(startingSide)){
-                let newConnectionSet = getConnectionSet(startingSide, team, board);
+            let startingCombinedSide = board.getCombinedSide(hex.side(0));
+            if(!allSearchedSides.has(startingCombinedSide)){
+                let newConnectionSet = getConnectionSet(startingCombinedSide, team, board);
                 connectionSets.push(newConnectionSet);
                 allSearchedSides = new Set([...allSearchedSides, ...newConnectionSet.combinedSides]);
             }
@@ -82,8 +82,9 @@ export function allTeamScore(board, team){
     let allSearchedSides = new Set();
     for(let hex of board.hexArray){
         for(let side of hex.sides){
-            if(!allSearchedSides.has(side)){
-                let newConnectionSet = getConnectionSet(side, team, board);
+            let startingCombinedSide = board.getCombinedSide(side);
+            if(!allSearchedSides.has(startingCombinedSide)){
+                let newConnectionSet = getConnectionSet(startingCombinedSide, team, board);
                 connectionSets.push(newConnectionSet);
                 allSearchedSides = new Set([...allSearchedSides, ...newConnectionSet.combinedSides]);
             }
