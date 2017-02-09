@@ -61,11 +61,10 @@ export class Dashboard extends Phaser.Sprite{
         let bonus;
         if(this.data.boardModel.selected === undefined){
             score = 0;
-            bonus = 0;
         }else{
             score = this.data.boardModel.selected.score;
-            bonus = this.data.boardModel.selected.sizeBonus;
         }
+        bonus = 0;
         this.data.highlightedSectionScore.text = "Highlighted Score: " + score;
         this.data.highlightedSectionScoreBonus.text = "Size Bonus: " + bonus;
         const currentTeam = this.data.teamInfo.currentTeam;

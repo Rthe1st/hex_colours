@@ -8,6 +8,10 @@ let settings = {
     mode: 'home'
 };
 
+export function boardModelSettingsGui(gui){
+    gui.add(settings, 'mode', ['home', 'normal']);
+}
+
 export class Board{
     //passing in x is even more reason to make this a phaser object
     constructor(dataString, mode, gui){
@@ -15,7 +19,6 @@ export class Board{
         this.combinedSides = this.createCombinedLines(this.hexagons);
         //settings.mode instead of this.mode is a horible hack
         settings.mode = mode;
-        gui.add(settings, 'mode', ['home', 'normal']);
     }
 
     getHex(x, y){

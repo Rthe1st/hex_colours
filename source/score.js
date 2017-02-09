@@ -2,31 +2,28 @@ import * as gridNavigation from "./gridNavigation.js";
 import * as teamInfo from "./teamInfo.js";
 
 let scoreSettings = {
-    perSideBonus: 1
+    perSideIncrease: 1
 };
 
-export function scoreSettingsGui(gui, game){
-    gui.add(boardSettings, 'spaceFactor', 0, 2);
+export function scoreSettingsGui(gui){
+    gui.add(scoreSettings, 'perSideIncrease', 0, 20).step(1);
 }
 
 class ConnectionSet{
-    constructor(combinedSides){
-        this.combinedSides = combinedSides;
+    constructor(combinedSidesScores){
+        this.combinedSidesScores = combinedSidesScores;
+    }
+
+    sideScore(combinedSide){
+        return this.combinedSidesScores.get(combinedSide) * scoreSettings.perSideIncrease;
     }
 
     get score(){
-        let perSideBonus = 1;
         let score = 0;
-        let count = 0;
-        for(let combinedSide of this.combinedSides){
-            score += combinedSide.score;
-            score += scoreSettings.perSideBonus;
+        for(let setPosition of this.combinedSidesScores.values()){
+            score += setPosition * scoreSettings.perSideIncrease;
         }
         return score;
-    }
-
-    get sizeBonus(){
-        return scoreSettings.perSideBonus*this.combinedSides.size;
     }
 }
 
@@ -35,26 +32,29 @@ class ConnectionSetGroup{
         this.connectionSets = connectionSets;
     }
 
-    get combinedSides(){
-        let all = new Set();
+    //this only works if all connection sets are mutaly exclusive
+    get combinedSidesScores(){
+        let all = new Map();
         for(let connectionSet of this.connectionSets){
-            all = new Set([...all, ...connectionSet.combinedSides]);
+            for(let [combinedSide, score] of connectionSet.combinedSidesScores.entries()){
+                all.set(combinedSide, score);
+            }
         }
         return all;
+    }
+
+    sideScore(combinedSide){
+        for(let connectionSet of this.connectionSets){
+            if(connectionSet.combinedSidesScores.has(combinedSide)){
+                return connectionSet.sideScore(combinedSide) * scoreSettings.perSideIncrease;
+            }
+        }
     }
 
     get score(){
         let totalScore = 0;
         for(let connectionSet of this.connectionSets){
             totalScore += connectionSet.score;
-        }
-        return totalScore;
-    }
-
-    get sizeBonus(){
-        let totalScore = 0;
-        for(let connectionSet of this.connectionSets){
-            totalScore += connectionSet.sizeBonus;
         }
         return totalScore;
     }
@@ -70,7 +70,7 @@ export function allTeamHomeMode(board, team){
             if(!allSearchedSides.has(startingCombinedSide)){
                 let newConnectionSet = getConnectionSet(startingCombinedSide, team, board);
                 connectionSets.push(newConnectionSet);
-                allSearchedSides = new Set([...allSearchedSides, ...newConnectionSet.combinedSides]);
+                allSearchedSides = new Set([...allSearchedSides, ...newConnectionSet.combinedSidesScores.keys()]);
             }
         }
     }
@@ -86,7 +86,7 @@ export function allTeamScore(board, team){
             if(!allSearchedSides.has(startingCombinedSide)){
                 let newConnectionSet = getConnectionSet(startingCombinedSide, team, board);
                 connectionSets.push(newConnectionSet);
-                allSearchedSides = new Set([...allSearchedSides, ...newConnectionSet.combinedSides]);
+                allSearchedSides = new Set([...allSearchedSides, ...newConnectionSet.combinedSidesScores.keys()]);
             }
         }
     }
@@ -106,7 +106,7 @@ function alreadyUsed(connects, combinedSide, board){
 
 export function getConnectionSet(startCord, team, board){
     let startCombinedSide = board.getCombinedSide(startCord);
-    let connection = new Set();
+    let connection = new Map();
     for(let nextTeam of startCombinedSide.hexSideTeams){
         if(team === nextTeam){
             growConnect(board, startCombinedSide, connection, nextTeam);
@@ -118,7 +118,7 @@ export function getConnectionSet(startCord, team, board){
 
 //warning: existing nodes is shittily update in function, not reutrned
 function growConnect(board, currentCombinedSide, existingNodes, team){
-    existingNodes.add(currentCombinedSide);
+    existingNodes.set(currentCombinedSide, existingNodes.size);
     for(let direction of [-2,-1,1,2]){
         let nextCombined = board.moveToAdjacentCombinedSide(currentCombinedSide, direction);
         if(nextCombined !== undefined && !existingNodes.has(nextCombined)){
