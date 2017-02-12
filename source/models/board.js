@@ -50,6 +50,14 @@ export class Board{
         this.selected = connectionSet;
     }
 
+    currentStateScore(team){
+        if(settings.mode == "home"){
+            return score.allTeamHomeMode(this, team).score;
+        }else{
+            return score.allTeamScore(this, team).score;
+        }
+    }
+
     teamHighlight(team){
         if(settings.mode == "home"){
             this.selected = score.allTeamHomeMode(this, team);

@@ -11,12 +11,18 @@ export class Dashboard extends Phaser.Sprite{
         this.data.height = game.height;
         this.outline();
         this.data.teamsDisplay = [];
+        this.data.currentStateTeamDisplay = [];
+        this.addChild(new Phaser.Text(this.game, 0, 70, "Total Scores:"));
+        this.addChild(new Phaser.Text(this.game, 0, 150, "Current Round:"));
+        this.data.boardModel = boardModel;
         for(let [index, team] of teamInfo.teams.entries()){
-            let teamDisplayGroup = this.teamHighlights(team, index*50, 70, 30, 30);
+            let teamDisplayGroup = this.teamHighlights(team, index*50, 110, 30, 30);
             this.data.teamsDisplay.push(teamDisplayGroup);
             this.addChild(teamDisplayGroup);
+            let currentStateTeamDisplayGroup = this.currentStateTeamHighlights(team, index*50, 190, 30, 30);
+            this.data.currentStateTeamDisplay.push(currentStateTeamDisplayGroup);
+            this.addChild(currentStateTeamDisplayGroup);
         }
-        this.data.boardModel = boardModel;
         this.moveCounter = new Phaser.Graphics(game, 0, this.data.height/2);
         this.addChild(this.moveCounter);
         this.data.highlightedSectionScore = new Phaser.Text(game, 0, 10, "", {wordWrap: true, wordWrapWidth: width, fontSize: 15});
@@ -25,7 +31,7 @@ export class Dashboard extends Phaser.Sprite{
         this.addChild(this.data.highlightedSectionScoreBonus);
     }
 
-    teamHighlights(team, x, y, width, height){
+    currentStateTeamHighlights(team, x, y, width, height){
         let group = new Phaser.Group(this.game, this);
         let teamHighlight = new Phaser.Graphics(this.game, x, y);
         teamHighlight.beginFill(team.colour);
@@ -35,6 +41,24 @@ export class Dashboard extends Phaser.Sprite{
         teamHighlight.events.onInputOver.add(function(){
             this.data.boardModel.teamHighlight(team);
         }, this);
+        group.addChild(teamHighlight);
+        let scoreText = new Phaser.Text(this.game, x, y, "");
+        group.addChild(scoreText);
+        this.data.boardModel.teamHighlight(team)
+        this.data.boardModel.currentStateScore(team);
+        let boardModel = this.data.boardModel;
+        scoreText.update = function(){
+            this.text = boardModel.currentStateScore(team);
+        };
+        return group;
+    }
+
+    teamHighlights(team, x, y, width, height){
+        let group = new Phaser.Group(this.game, this);
+        let teamHighlight = new Phaser.Graphics(this.game, x, y);
+        teamHighlight.beginFill(team.colour);
+        teamHighlight.drawRect(0,0, width, height);
+        teamHighlight.endFill();
         group.addChild(teamHighlight);
         let scoreText = new Phaser.Text(this.game, x, y, "");
         group.addChild(scoreText);
@@ -55,6 +79,9 @@ export class Dashboard extends Phaser.Sprite{
     update(){
         for(let teamDisplayGroup of this.data.teamsDisplay){
             teamDisplayGroup.update();
+        }
+        for(let currentStateTeamDisplayGroup of this.data.currentStateTeamDisplay){
+            currentStateTeamDisplayGroup.update();
         }
         this.moveCounter.clear();
         let score;
