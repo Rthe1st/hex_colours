@@ -16,29 +16,33 @@ export class Board{
     //passing in x is even more reason to make this a phaser object
     constructor(dataString, mode, gui){
         this.hexagons = this.parseDataString(dataString);
-        this.combinedSides = this.createCombinedLines(this.hexagons);
+        this.createCombinedLines(this.hexArray);
         //settings.mode instead of this.mode is a horible hack
         settings.mode = mode;
     }
 
     getHex(x, y){
-        if(!this.hexagonExists(x,y)){
-            return undefined;
+        if(this.hexagons.get(x) !== undefined){
+            return this.hexagons.get(x).get(y);
         }else{
-            return this.hexagons[x][y];
+            return undefined;
         }
     }
 
     get gridWidth(){
-        if(this.hexagons.length === 0){
+        if(this.hexagons.size === 0){
             return 0;
         }else{
-            return this.hexagons[0].length;
+            return Math.max(...this.hexagons.keys());
         }
     }
 
     get gridHeight(){
-        return this.hexagons.length;
+        let currentMax = 0;
+        for(let row of this.hexagons.values()){
+            currentMax = Math.max(currentMax, ...row.keys());
+        }
+        return currentMax;
     }
 
     selectSection(singleSide){
@@ -75,8 +79,8 @@ export class Board{
 
     get hexArray(){
         let hexArray = [];
-        for(const hexRow of this.hexagons){
-            hexArray = hexArray.concat(hexRow);
+        for(const hexRow of this.hexagons.values()){
+            hexArray = hexArray.concat(Array.from(hexRow.values()));
         }
         return hexArray;
     }
@@ -95,28 +99,24 @@ export class Board{
 
     get dataString(){
         let rows = [];
-        for(let row of this.hexagons){
-            let hexagons = [];
-            for(let hexagon of row){
-                hexagons.push(hexagon.sidesAsString());
+        for(let x of Array.from(this.hexagons.keys()).sort()){
+            while(rows.length < x){
+                rows.push("E");
             }
-            rows.push(hexagons.join("h"));
+            let row = [];
+            for(let y of Array.from(this.hexagons.get(x).keys()).sort()){
+                while(row.length < y){
+                    row.push("E");
+                }
+                row.push(this.getHex(x,y).sidesAsString());
+            }
+            rows.push(row.join("h"));
         }
         return rows.join("r");
     }
 
     hexagonExists(x,y){
-        if(x < 0){
-            return false;
-        }else if(x >= this.hexagons.length){
-            return false;
-        }else if(y < 0){
-            return false;
-        }else if(y >= this.hexagons[x].length){
-            return false;
-        }else{
-            return true;
-        }
+        return this.getHex(x, y) === undefined;
     }
 
     moveToAdjacentCombinedSide(combinedSideCord, direction){
@@ -164,34 +164,23 @@ export class Board{
     //could this be simplified if we stuck an extra boarder of "non-move" hexagons round the edge?
     //to make side calcs simplifer
     createCombinedLines(hexagons){
-        let combinedSides = new Map();
-        for(let x = 0; x < hexagons.length; x++){
-            combinedSides.set(x, new Map());
-            for(let y = 0; y < hexagons[x].length; y++){
-                combinedSides.get(x).set(y, new Map());
-                let centerHexagon = hexagons[x][y];
-                for(let sideNumber = 0; sideNumber < 6; sideNumber++){
-                    let hexInfo = [{
-                        hexagon: centerHexagon,
-                        side: sideNumber
-                    }];
-                    let hexagon2Coordinates = gridNavigation.getAdjacentHexagonCord({x: x, y: y, side: sideNumber});
-                    let hexagon2Exists = this.hexagonExists(hexagon2Coordinates.x, hexagon2Coordinates.y);
-                    //sides numbered above 3 are covered when we iterate over the other hexagon (so we don't create every combine twice)
-                    if(!hexagon2Exists || sideNumber < 3){
-                        if(hexagon2Exists){
-                           hexInfo.push({
-                               hexagon: hexagons[hexagon2Coordinates.x][hexagon2Coordinates.y],
-                               side: (sideNumber + 3) % 6
-                           });
-                        }
-                        let combinedSide = new CombinedSide({x: x, y: y, side: sideNumber}, this);
-                        combinedSides.get(x).get(y).set(sideNumber, combinedSide);
+        this.combinedSides = new Map();
+        for(let centerHexagon of hexagons){
+            for(let side of centerHexagon.sides){
+                //so we don't create every combine twice)
+                if(this.getCombinedSide(side) === undefined){
+                    if(this.combinedSides.get(side.x) === undefined){
+                        this.combinedSides.set(side.x, new Map());
                     }
+                    let row = this.combinedSides.get(side.x);
+                    if(row.get(side.y) === undefined){
+                        row.set(side.y, new Map());
+                    }
+                    let rowColumn = row.get(side.y);
+                    rowColumn.set(side.side, new CombinedSide(side, this));
                 }
             }
         }
-        return combinedSides;
     }
 
     //is this better defined as hexagon class method?
@@ -210,14 +199,16 @@ export class Board{
     }
 
     parseDataString(string){
-        let hexagons = [];
+        let hexagons = new Map();
         for(let [x, rowData] of string.split("r").entries()){
-            let row = [];
+            let row = new Map();
             for(let [y, hexagonData] of rowData.split("h").entries()){
-                let hexagon = new Hexagon(hexagonData, {x: x, y: y}, this);
-                row.push(hexagon);
+                if(hexagonData != "E"){
+                    let hexagon = new Hexagon(hexagonData, {x: x, y: y}, this);
+                    row.set(y, hexagon);
+                }
             }
-            hexagons.push(row);
+            hexagons.set(x, row);
         }
         return hexagons;
     }

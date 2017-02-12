@@ -32,9 +32,9 @@ export class CombinedSide extends Phaser.Sprite{
         this.data.model = model;
         let hexPoints = geometry.relativeScaledHexPoints(this.data.boardView.outerSideLength);
         let start = hexPoints[this.data.model.cords.side];
+        let end = hexPoints[(this.data.model.cords.side + 1) % 6];
         this.data.graphics = new Phaser.Graphics(game, start.x, start.y);
         this.addChild(this.data.graphics);
-        let end = hexPoints[(this.data.model.cords.side + 1) % 6];
         let textPosition = {x: (start.x + end.x)/2, y: (start.y + end.y)/2};
         this.data.text = new Phaser.Text(game, textPosition.x, textPosition.y, "");
         this.addChild(this.data.text);
@@ -47,8 +47,11 @@ export class CombinedSide extends Phaser.Sprite{
         this.y = worldCords.y;
         let hexPoints = geometry.relativeScaledHexPoints(this.data.boardView.outerSideLength);
         let start = hexPoints[this.data.model.cords.side];
+        let end = hexPoints[(this.data.model.cords.side + 1) % 6];
         this.data.graphics.x = start.x;
         this.data.graphics.y = start.y;
+        this.data.text.x = (start.x + end.x)/2;
+        this.data.text.y = (start.y + end.y)/2;
     }
 
     update(){
