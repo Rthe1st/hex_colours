@@ -28,19 +28,17 @@ export class CombinedSide{
 
     get selected(){
         if(this.board.selected !== undefined){
-            return this.board.selected.combinedSides.has(this);
+            return this.board.selected.combinedSidesScores.has(this);
         }else{
             return 0;
         }
     }
 
     get score(){
-        let score = 0;
-        let teams = this.hexSideTeams;
-        if(teams.length === 2 && teams[0] === teams[1]){
-            return scoring.doubleColor;
+        if(!this.selected){
+            throw new Error("don't ask a combined side for it's score when not highlighted, only for use by side view");
         }else{
-            return scoring.singleColor;
+            return this.board.selected.sideScore(this);
         }
     }
 

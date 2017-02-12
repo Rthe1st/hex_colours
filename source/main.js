@@ -9,11 +9,12 @@ import * as dat from "exdat";//browserify doesn't like dat.gui, plus I don't thi
 import {hexagonSettingsGui} from "./views/hexagon.js";
 import {combinedSideSettingsGui} from "./views/combinedSide.js";
 import {boardSettingsGui, Board as BoardView} from "./views/board.js";
-import {Board as BoardModel} from "./models/board.js";
+import {Board as BoardModel, boardModelSettingsGui} from "./models/board.js";
 import * as teamInfo from "./teamInfo.js";
 import * as sideGeneration from "./sideGeneration.js";
 import {singleSideSettingsGui} from "./views/SingleSide.js";
 import {combinedSideGameSettingsGui} from "./models/combinedSide.js";
+import {scoreSettingsGui} from "./score.js";
 
 function createBoard(game, dataString){
     if(dataString === undefined){
@@ -74,6 +75,8 @@ function onCreate(game) {
     combinedSideSettingsGui(settingsGui);
     teamInfo.teamInfoSettingsGui(settingsGui);
     singleSideSettingsGui(settingsGui);
+    scoreSettingsGui(settingsGui);
+    boardModelSettingsGui(settingsGui);
 }
 function update(game){}
 window.onload = function() {

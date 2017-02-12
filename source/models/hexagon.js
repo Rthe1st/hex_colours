@@ -23,6 +23,14 @@ export class Hexagon{
         this.gridCords = gridCords;
     }
 
+    get x(){
+        return this.gridCords.x;
+    }
+
+    get y(){
+        return this.gridCords.y;
+    }
+
     sideNumber(side){
         for(let [sideNumber, potentialMatch] of this.sides.entries()){
             if(side === potentialMatch){

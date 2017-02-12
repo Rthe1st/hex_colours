@@ -4,7 +4,8 @@ import {Dashboard} from "./dashboard.js";
 import * as teamInfo from "../teamInfo.js";
 
 let boardSettings = {
-    spaceFactor: 0.6
+    spaceFactor: 0.6,
+    sideLength: 10
 };
 
 export function boardSettingsGui(gui, game){
@@ -34,7 +35,8 @@ export class Board extends Phaser.Sprite{
             sideLength = this.defaultSideLength;
         }
         this.data.sideLength = sideLength;
-        gui.add(this.data, 'sideLength', sideLength*0.5, sideLength*2);
+        this.data.gui = gui;
+        this.data.sideLengthGui = gui.add(this.data, 'sideLength', sideLength*0.5, sideLength*2);
         this.hexagons = [];
         this.data.gameBoardGroup = new Phaser.Group(game, this);
         this.data.gameBoardGroup.x = this.data.dashboard.data.width;
@@ -52,6 +54,11 @@ export class Board extends Phaser.Sprite{
             this.data.gameBoardGroup.addChild(combinedSide);
             this.combinedSides.push(combinedSide);
         }
+    }
+
+    destroy(destroyChildren, destroyTexture){
+        this.data.gui.remove(this.data.sideLengthGui);
+        super.destroy(destroyChildren, destroyTexture);
     }
 
     get defaultSideLength(){
