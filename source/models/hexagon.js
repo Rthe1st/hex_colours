@@ -2,16 +2,19 @@ import {teams} from "../teamInfo.js";
 import {SingleSide} from "./SingleSide.js";
 
 export class Hexagon{
-    constructor(dataString, gridCords, board){
+    constructor(sideInfo, gridCords, board){
         this.sides = [];
-        if(dataString[0] == "!"){
+        this.gridCords = gridCords;
+        if(sideInfo[0] == "!"){
             this.isHome = true;
-            this.team = teams[dataString[1]];
+            this.team = teams[sideInfo[1]];
             for(let sideCount = 0; sideCount < 6; sideCount++){
                 this.sides.push(new SingleSide(this.team, this, board));
             }
         }else{
-            for(let side of dataString.split(":")){
+            console.log(sideInfo);
+            console.log(sideInfo.split(":"));
+            for(let side of sideInfo.split(":")){
                 let team = teams[side];
                 this.sides.push(new SingleSide(team, this, board));
             }
@@ -20,7 +23,7 @@ export class Hexagon{
             throw new Error("incorrect number of sides: " + sides.length);
         }
         this.combinedSides = new Map();
-        this.gridCords = gridCords;
+        this.listeners = new Set();
     }
 
     get x(){
@@ -63,8 +66,33 @@ export class Hexagon{
             let absoluteAmount = amount*-1;
             amount = 6-absoluteAmount;
         }
-        for(let i=0;i<amount;i++){
-            this.sides.unshift(this.sides.pop());
+        let rotationAllowed = false;
+        for(let listener of this.listeners){
+            rotationAllowed |= listener.rotate(this.gridCords, amount);
         }
+        if(rotationAllowed){
+            for(let i=0;i<amount;i++){
+                this.sides.unshift(this.sides.pop());
+            }
+        }
+    }
+
+    addListener(listener){
+        this.listeners.add(listener);
+    }
+
+    removeListener(listener){
+        this.listeners.delete(listener);
+    }
+
+    get canRotate(){
+        for(let listener of this.listeners){
+            if(this.side(listener.side).team === listener.team && this.x == listener.x && this.y == listener.y){
+                return true;
+            }else if(this.side((listener.side + 3)%6).team === listener.team){
+                return true;
+            }
+        }
+        return false;
     }
 }

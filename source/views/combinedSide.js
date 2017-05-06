@@ -1,14 +1,14 @@
 import * as geometry from "../geometry.js";
 
 let lineStyle = {
-    thickness: 5,
+    thickness: 0,
     alpha: 1
 };
 
 let combinedColours = {
-    team_0_1: 0xffb000,
-    team_1_2: 0x00ff00,
-    team_2_0: 0xaf00ff
+    team_0_1: 0xff0000,//0xffb000,
+    team_1_2: 0x666666,//0x00ff00,
+    team_2_0: 0xff0000,//0xaf00ff
 };
 
 export function combinedSideSettingsGui(gui){
@@ -60,6 +60,9 @@ export class CombinedSide extends Phaser.Sprite{
         this.data.graphics.angle = externalTangentAngle*this.data.model.cords.side;
         this.data.graphics.clear();
         let hexSideTeams = this.data.model.hexSideTeams;
+        if(hexSideTeams.length === 0){
+            return;
+        }
         let firstTeam = hexSideTeams[0];
         let colour;
         if(hexSideTeams.length === 2){
@@ -68,7 +71,7 @@ export class CombinedSide extends Phaser.Sprite{
         }else{
             colour = firstTeam.colour;
         }
-        if(this.data.model.selected){
+        if(this.data.model.selected && false){
             //this is gonna be a real resource drain
             //should instead render to texture (6 different ones), then reapply
             let steps = 10;
@@ -85,6 +88,8 @@ export class CombinedSide extends Phaser.Sprite{
         }else{
             this.data.text.visible = false;
         }
+        //temp disable score display
+        this.data.text.visible = false;
         //doing this last means it sits on top of the hightligh
         this.data.graphics.lineStyle(lineStyle.thickness, colour, lineStyle.alpha);
         this.data.graphics.moveTo(0, 0);

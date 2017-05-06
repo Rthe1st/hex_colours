@@ -51,6 +51,13 @@ export class Hexagon extends Phaser.Sprite{
         this.addChild(this.data.text);
     }
 
+    /*destroy(){
+        let boardModel = this.data.boardView.data.model;
+        let hexModel = this.data.model;
+        //super.destroy();
+        boardModel.hexagons.get(hexModel.x).delete(hexModel.y);
+    }*/
+
     refreshPositon(){
         let worldCords = this.data.boardView.calculateWorldCords(this.data.model.gridCords);
         this.x = worldCords.x;
@@ -80,7 +87,12 @@ export class Hexagon extends Phaser.Sprite{
 
     drawHexagon(){
         this.data.body.clear();
-        this.data.body.beginFill(hexStyle.colour);
+        if(this.data.model.canRotate){
+            this.data.body.beginFill(hexStyle.colour);
+        }else{
+            this.data.body.beginFill(hexStyle.colour, 0.25);
+        }
+
         this.data.body.drawPolygon(geometry.relativeScaledHexPoints(this.data.boardView.innerSideLength));
         this.data.body.endFill();
         if(this.data.model.isHome){

@@ -3,13 +3,16 @@ import {CombinedSide} from "./combinedSide.js";
 import * as teamInfo from "../teamInfo.js";
 import * as gridNavigation from "../gridNavigation.js";
 import * as score from '../score.js';
+import {Character} from "./Character.js";
 
 let settings = {
-    mode: 'home'
+    mode: 'home',
+    mapEdit: false
 };
 
 export function boardModelSettingsGui(gui){
     gui.add(settings, 'mode', ['home', 'normal']);
+    gui.add(settings, 'mapEdit');
 }
 
 export class Board{
@@ -43,6 +46,21 @@ export class Board{
             currentMax = Math.max(currentMax, ...row.keys());
         }
         return currentMax;
+    }
+
+    destroyHex(x, y){
+        this.hexagons.get(x).delete(y);
+        for(let side=0; side<6; side++){
+            let combinedSide = this.getCombinedSide({x: x, y: y, side: side});
+            let alternativeCords = combinedSide.alternativeCords;
+            if(!this.hexagonExists(x, y) && !this.hexagonExists(alternativeCords.x, alternativeCords.y)){
+                this.combinedSides.get(combinedSideCord.x).get(combinedSideCord.y).delete(combinedSideCord.side);
+            }
+        }
+    }
+
+    destroyCombinedSide(combinedSideCord){
+        this.combinedSides.get(combinedSideCord.x).get(combinedSideCord.y).delete(combinedSideCord.side);
     }
 
     selectSection(singleSide){
@@ -93,6 +111,14 @@ export class Board{
         return hexArray;
     }
 
+    get characterArray(){
+        let characterArray = [];
+        for(const characterRow of this.characters.values()){
+            characterArray = characterArray.concat(Array.from(characterRow.values()));
+        }
+        return characterArray;
+    }
+
     get combinedSidesArray(){
         let array = [];
         for(const row of this.combinedSides.values()){
@@ -106,21 +132,20 @@ export class Board{
     }
 
     get dataString(){
-        let rows = [];
+        let hexagons = [];
         for(let x of Array.from(this.hexagons.keys()).sort()){
-            while(rows.length < x){
-                rows.push("E");
-            }
-            let row = [];
             for(let y of Array.from(this.hexagons.get(x).keys()).sort()){
-                while(row.length < y){
-                    row.push("E");
-                }
-                row.push(this.getHex(x,y).sidesAsString());
+                hexagons.push("(" + x + "," + y + ")" + this.getHex(x,y).sidesAsString());
             }
-            rows.push(row.join("h"));
         }
-        return rows.join("r");
+        let characters = [];
+        for(let x of Array.from(this.characters.keys()).sort()){
+            for(let y of Array.from(this.characters.get(x).keys()).sort()){
+                let character = this.characters.get(x).get(y);
+                characters.push([character.x, character.y, character.side, character.team.number].join(","));
+            }
+        }
+        return hexagons.join("|") + "-" + characters.join(":");
     }
 
     hexagonExists(x,y){
@@ -192,33 +217,77 @@ export class Board{
     }
 
     //is this better defined as hexagon class method?
-    hexagonInput(clickedHexagon){
-        teamInfo.makeMove();
-        clickedHexagon.data.model.rotate(1);
-        if(teamInfo.endOfRound()){
-            for(let team of teamInfo.teams){
-                if(settings.mode == "home"){
-                    team.score += score.allTeamHomeMode(this, team).score;
-                }else{
-                    team.score += score.allTeamScore(this, team).score;
+    hexagonInput(clickedHexagon, pointer){
+        if(settings.mapEdit){
+            this.destroyHex(clickedHexagon.data.model.x, clickedHexagon.data.model.y);
+            //clickedHexagon.game.world.remove(clickedHexagon);
+            clickedHexagon.kill();
+            //clickedHexagon.destroy();
+        }else{
+            teamInfo.makeMove();
+            let rotationAmt = 1;
+            //using ctrlKey instead has a bug in phaser 2.6.2 https://github.com/photonstorm/phaser/issues/2167
+            if(pointer.leftButton.altKey){
+                rotationAmt *= -1;
+            }
+            clickedHexagon.data.model.rotate(rotationAmt);
+            if(teamInfo.endOfRound()){
+                for(let team of teamInfo.teams){
+                    if(settings.mode == "home"){
+                        team.score += score.allTeamHomeMode(this, team).score;
+                    }else{
+                        team.score += score.allTeamScore(this, team).score;
+                    }
                 }
             }
         }
     }
 
-    parseDataString(string){
-        let hexagons = new Map();
-        for(let [x, rowData] of string.split("r").entries()){
-            let row = new Map();
-            for(let [y, hexagonData] of rowData.split("h").entries()){
-                if(hexagonData != "E"){
-                    let hexagon = new Hexagon(hexagonData, {x: x, y: y}, this);
-                    row.set(y, hexagon);
-                }
-            }
-            hexagons.set(x, row);
+    characterInput(clickedCharacter, pointer){
+        if(settings.mapEdit){
+            this.characters.get(x).delete(y);
+            //this.destroyHex(clickedHexagon.data.model.x, clickedHexagon.data.model.y);
+            clickedCharacter.kill();
         }
+    }
+
+    parseGridCords(cordData){
+        let withoutBrackets = cordData.substring(1,cordData.length-1);
+        let [x,y] = withoutBrackets.split(",");
+        return {x: parseInt(x), y: parseInt(y)};
+    }
+
+    parseDataString(dataString){
+        let [hexagonsData, characterData] = dataString.split("-");
+        let hexagons = new Map();
+        for(let hexagonData of hexagonsData.split("|")){
+            if(hexagonData == "E"){
+                continue;
+            }
+            let [cordData, sideData, ...rest] = hexagonData.split(")");
+            let cords = this.parseGridCords(cordData + ")");
+            if(hexagons.get(cords.x) === undefined){
+                hexagons.set(cords.x, new Map());
+            }
+            hexagons.get(cords.x).set(cords.y, new Hexagon(sideData, cords, this));
+        }
+        this.hexagons = hexagons;
+        this.characters = this.parseCharacters(characterData);
         return hexagons;
+    }
+
+    parseCharacters(characterData){
+        let characters = new Map();
+        for(let characterCord of characterData.split(":")){
+            let [x, y, side, team] = characterCord.split(",").map(Number);
+            this.getHex(x,y).side(side).team = teamInfo.teams[0];
+            if(characters.get(x) === undefined){
+                characters.set(x, new Map());
+            }
+            let character = new Character(this, {x: x, y: y, side: side}, teamInfo.teams[team]);
+            characters.get(x).set(y, character);
+        }
+        return characters;
     }
 
 }

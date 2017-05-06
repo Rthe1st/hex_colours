@@ -32,10 +32,11 @@ function createBoard(game, dataString){
 let globalParams = {
     width: window.innerWidth,
     height: window.innerHeight,
-    gridWidth: 2,
-    gridHeight: 2,
+    gridWidth: 5,
+    gridHeight: 4,
     sideGeneration: "random",//be nice to store function directly here but doesn't play nice with dat-gui,
     dashBoardWidth: window.innerWidth/10,
+    presetLevels: "(0,0)2:2:0:0:1:0|(0,1)0:0:0:2:2:0|(0,2)0:2:2:0:0:1|(0,3)0:0:1:2:0:1|(1,0)2:0:0:0:0:1|(1,1)2:1:2:1:0:2|(1,2)2:1:0:1:1:0|(1,3)0:2:0:0:2:0|(2,0)2:0:0:1:0:2|(2,1)1:0:0:1:2:0|(2,2)2:2:0:2:2:0|(2,3)1:2:0:2:0:2|(3,0)1:2:2:2:0:0|(3,1)1:2:1:0:0:1|(3,2)1:0:0:1:1:0|(3,3)2:0:1:2:0:1|(4,0)0:0:1:0:2:0|(4,1)0:0:1:1:1:0|(4,2)0:2:1:1:0:1|(4,3)0:0:2:0:1:2-0,3,4,0:0,1,1,0:3,0,5,0:2,0,2,0:2,2,5,0:4,1,1,0:1,3,3,0:0,2,3,0:3,2,5,0:3,3,1,0:3,1,3,0"
 };
 
 function globalSettingsGui(settingsGui, game){
@@ -55,6 +56,14 @@ function globalSettingsGui(settingsGui, game){
     mapFolder.add(globalParams, 'sideGeneration', ["random", "even", "evenRandom", "dataString"]).listen().onFinishChange(function(genMethod){
         game.boardView.destroy();
         createBoard(game);
+    });
+    let levels = {
+        0: "(0,0)2:2:2:2:2:2|(0,1)2:2:2:2:2:2-0,0,3,0:0,1,3,0",
+        1: "(0,0)2:2:0:0:1:0|(0,1)0:0:0:2:2:0|(0,2)0:2:2:0:0:1|(0,3)0:0:1:2:0:1|(1,0)2:0:0:0:0:1|(1,1)2:1:2:1:0:2|(1,2)2:1:0:1:1:0|(1,3)0:2:0:0:2:0|(2,0)2:0:0:1:0:2|(2,1)1:0:0:1:2:0|(2,2)2:2:0:2:2:0|(2,3)1:2:0:2:0:2|(3,0)1:2:2:2:0:0|(3,1)1:2:1:0:0:1|(3,2)1:0:0:1:1:0|(3,3)2:0:1:2:0:1|(4,0)0:0:1:0:2:0|(4,1)0:0:1:1:1:0|(4,2)0:2:1:1:0:1|(4,3)0:0:2:0:1:2-0,3,4,0"
+    };
+    mapFolder.add(globalParams, 'presetLevels', levels).listen().onFinishChange(function(newDataString){
+        game.boardView.destroy();
+        createBoard(game, newDataString);
     });
     //this cant point to board.dataString because dat-gui doesn't work with getters/setters
     mapFolder.add(globalParams, 'dataString').listen().onFinishChange(function(newDataString){
