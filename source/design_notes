@@ -1,0 +1,11 @@
+Consider having a "player" who sites on edges
+Moves with edge as click hex rotates
+Has to get to places on the board (say to pick stuff up)
+Limited number of moves?
+Could be done with just edges and not-edges
+colours could bring a "hue" style feature, only move on edges of your colour
+Could the things you pick up change your colour?
+
+Probabal goal:
+Collect all "characters" of the same colours into the same spot
+//possible option for different coloured chracters to be combined?

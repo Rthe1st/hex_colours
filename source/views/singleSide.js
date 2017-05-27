@@ -47,7 +47,7 @@ export class SingleSide extends Phaser.Sprite{
         this.data.graphics.moveTo(0, 0);
         this.data.graphics.lineTo(this.data.boardView.innerSideLength, 0);
 
-        if(this.data.model.selected){
+        if(this.data.model.selected && false){
             //this is gonna be a real resource drain
             //should instead render to texture (6 different ones), then reapply
             let steps = 10;

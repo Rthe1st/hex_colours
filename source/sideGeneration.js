@@ -4,20 +4,40 @@ export let mappingForDatGui = new Map([
     ["evenRandom", evenRandom]
 ]);
 
+function generateCharacters(gridWidth, gridHeight){
+    let characters = [];
+    //we need at least 2 for it to be playable
+    for(let i=0; i<2;i++){
+        let x = Math.floor(Math.random()*gridWidth);
+        let y = Math.floor(Math.random()*gridHeight);
+        let side = Math.floor(Math.random()*6);
+        characters.push([x, y, side, 0].join(","));
+    }
+    for(let character_number=0; character_number < 15; character_number++){
+        if(Math.random() > 0.5){
+            continue;
+        }
+        let x = Math.floor(Math.random()*gridWidth);
+        let y = Math.floor(Math.random()*gridHeight);
+        let side = Math.floor(Math.random()*6);
+        let team = Math.floor(Math.random()*2);
+        characters.push([x, y, side, team].join(","));
+    }
+    return characters.join(":");
+}
+
 function buildBoard(sideGenerator, gridWidth, gridHeight){
-    let rows = [];
-    for(let row=0; row<gridWidth; row++){
-        let hexagons = [];
-        for(let height=0; height<gridHeight; height++){
+    let hexagons = [];
+    for(let x=0; x<gridWidth; x++){
+        for(let y=0; y<gridHeight; y++){
             let sides = [];
             for(let side of sideGenerator()){
                 sides.push(side);
             }
-            hexagons.push(sides.join(":"));
+            hexagons.push("(" + x + "," + y + ")" + sides.join(":"));
         }
-        rows.push(hexagons.join("h"));
     }
-    return rows.join("r");
+    return hexagons.join("|") + "-" + generateCharacters(gridWidth, gridHeight);
 }
 
 export function evenRandomWithHomes(teams, gridWidth, gridHeight){
@@ -47,9 +67,14 @@ export function evenRandom(teams, gridWidth, gridHeight){
 
 export function random(teams, gridWidth, gridHeight){
     function sideGenerator(){
-        let sides = [];
-        for(let sideNumber = 0; sideNumber < 6; sideNumber++){
-            sides.push(Math.floor(Math.random()*teams.length));
+        let sides = [0];
+        for(let sideNumber = 0; sideNumber < 5; sideNumber++){
+            if(Math.random() > 0.5){
+                sides.push(Math.floor(Math.random()*teams.length));
+            }else{
+                sides.unshift(Math.floor(Math.random()*teams.length));
+            }
+
         }
         return sides;
     }

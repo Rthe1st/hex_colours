@@ -2,6 +2,7 @@ import {Hexagon} from "./hexagon.js";
 import {CombinedSide} from "./combinedSide.js";
 import {Dashboard} from "./dashboard.js";
 import * as teamInfo from "../teamInfo.js";
+import {Character} from "./character.js";
 
 let boardSettings = {
     spaceFactor: 0.6,
@@ -18,9 +19,9 @@ function calculateSideLength(width, height, gridWidth, gridHeight){
     let boardWidth = (1.5*gridWidth)+1;
     let boardHeight = (2*Math.sin(Math.PI/3)*gridHeight)+(1.5*Math.sin(Math.PI/3));
     if(boardWidth > boardHeight){
-        return width/(1.5*gridWidth+1);
+        return width/(1.5*gridWidth+1)/2;
     }else{
-        return height/((2*Math.sin(Math.PI/3)*gridHeight)+(1.5*Math.sin(Math.PI/3)));
+        return height/((2*Math.sin(Math.PI/3)*gridHeight)+(1.5*Math.sin(Math.PI/3)))/2;
     }
 }
 
@@ -54,6 +55,12 @@ export class Board extends Phaser.Sprite{
             this.data.gameBoardGroup.addChild(combinedSide);
             this.combinedSides.push(combinedSide);
         }
+        this.characters = [];
+        for(let characterModel of model.characterArray){
+            let character = new Character(game, this, characterModel, model.characterInput);
+            this.data.gameBoardGroup.addChild(character);
+            this.characters.push(character);
+        }
     }
 
     destroy(destroyChildren, destroyTexture){
@@ -79,6 +86,9 @@ export class Board extends Phaser.Sprite{
         }
         for(let combinedSide of this.combinedSides){
             combinedSide.update();
+        }
+        for(let character of this.characters){
+            character.update();
         }
         this.data.dashboard.update();
     }

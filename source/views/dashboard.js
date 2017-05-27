@@ -44,7 +44,7 @@ export class Dashboard extends Phaser.Sprite{
         group.addChild(teamHighlight);
         let scoreText = new Phaser.Text(this.game, x, y, "");
         group.addChild(scoreText);
-        this.data.boardModel.teamHighlight(team)
+        this.data.boardModel.teamHighlight(team);
         this.data.boardModel.currentStateScore(team);
         let boardModel = this.data.boardModel;
         scoreText.update = function(){
@@ -77,7 +77,7 @@ export class Dashboard extends Phaser.Sprite{
     }
 
     update(){
-        for(let teamDisplayGroup of this.data.teamsDisplay){
+        /*for(let teamDisplayGroup of this.data.teamsDisplay){
             teamDisplayGroup.update();
         }
         for(let currentStateTeamDisplayGroup of this.data.currentStateTeamDisplay){
@@ -96,7 +96,7 @@ export class Dashboard extends Phaser.Sprite{
         this.data.highlightedSectionScoreBonus.text = "Size Bonus: " + bonus;
         const currentTeam = this.data.teamInfo.currentTeam;
         const moveLimit = this.data.teamInfo.settings.standardMoveLimit;
-        this.moveCounter.beginFill(currentTeam.colour);
+        /*this.moveCounter.beginFill(currentTeam.colour);
         let radius = Math.min(this.data.width, this.data.height)/2;
         let center = {x: this.data.width/2, y: 0};
         if(currentTeam.movesLeft == moveLimit){
@@ -108,6 +108,6 @@ export class Dashboard extends Phaser.Sprite{
             let topOffset = -Math.PI/2;
             this.moveCounter.arc(center.x, center.y, radius, topOffset, topOffset+endAngleRadians, true, 128);
         }
-        this.moveCounter.endFill();
+        this.moveCounter.endFill();*/
     }
 }
