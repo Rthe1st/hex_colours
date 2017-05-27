@@ -20,7 +20,8 @@ function generateCharacters(gridWidth, gridHeight){
         let x = Math.floor(Math.random()*gridWidth);
         let y = Math.floor(Math.random()*gridHeight);
         let side = Math.floor(Math.random()*6);
-        characters.push([x, y, side, 0].join(","));
+        let team = Math.floor(Math.random()*2);
+        characters.push([x, y, side, team].join(","));
     }
     return characters.join(":");
 }

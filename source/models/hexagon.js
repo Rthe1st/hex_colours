@@ -12,8 +12,6 @@ export class Hexagon{
                 this.sides.push(new SingleSide(this.team, this, board));
             }
         }else{
-            console.log(sideInfo);
-            console.log(sideInfo.split(":"));
             for(let side of sideInfo.split(":")){
                 let team = teams[side];
                 this.sides.push(new SingleSide(team, this, board));

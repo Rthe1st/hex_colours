@@ -114,7 +114,9 @@ export class Board{
     get characterArray(){
         let characterArray = [];
         for(const characterRow of this.characters.values()){
-            characterArray = characterArray.concat(Array.from(characterRow.values()));
+            for(const characterHex of characterRow.values()){
+                characterArray = characterArray.concat(Array.from(characterHex.values()));
+            }
         }
         return characterArray;
     }
@@ -141,8 +143,10 @@ export class Board{
         let characters = [];
         for(let x of Array.from(this.characters.keys()).sort()){
             for(let y of Array.from(this.characters.get(x).keys()).sort()){
-                let character = this.characters.get(x).get(y);
-                characters.push([character.x, character.y, character.side, character.team.number].join(","));
+                for(let side of Array.from(this.characters.get(x).get(y).keys()).sort()){
+                    let character = this.characters.get(x).get(y).get(side);
+                    characters.push([character.x, character.y, character.side, character.team.number].join(","));
+                }
             }
         }
         return hexagons.join("|") + "-" + characters.join(":");
@@ -240,12 +244,29 @@ export class Board{
                     }
                 }
             }
+            this.checkWinCondition();
         }
+    }
+
+    checkWinCondition(){
+        let teamCords = new Map();
+        for(let character of this.characterArray){
+            if(!teamCords.has(character.team)){
+                teamCords.set(character.team, character.cords);
+            }else{
+                let alreadySeenCords = teamCords.get(character.team);
+                if(!this.getCombinedSide(alreadySeenCords).equals(character.cords)){
+                    return false;
+                }
+            }
+        }
+        alert("you won!");
+        return true;
     }
 
     characterInput(clickedCharacter, pointer){
         if(settings.mapEdit){
-            this.characters.get(x).delete(y);
+            //this.characters.get(x).delete(y);
             //this.destroyHex(clickedHexagon.data.model.x, clickedHexagon.data.model.y);
             clickedCharacter.kill();
         }
@@ -278,14 +299,21 @@ export class Board{
 
     parseCharacters(characterData){
         let characters = new Map();
+        if(characterData === ""){
+            return characters;
+        }
         for(let characterCord of characterData.split(":")){
             let [x, y, side, team] = characterCord.split(",").map(Number);
-            this.getHex(x,y).side(side).team = teamInfo.teams[0];
             if(characters.get(x) === undefined){
                 characters.set(x, new Map());
             }
+            let characterColumn = characters.get(x);
+            if(characterColumn.get(y) === undefined){
+                characterColumn.set(y, new Map());
+            }
+            let characterHex = characterColumn.get(y);
             let character = new Character(this, {x: x, y: y, side: side}, teamInfo.teams[team]);
-            characters.get(x).set(y, character);
+            characterHex.set(side, character);
         }
         return characters;
     }

@@ -29,6 +29,15 @@ function createBoard(game, dataString){
     game.boardView = boardView;
 }
 
+let levels = {
+    0: "(0,0)2:2:2:0:2:2|(0,1)2:2:2:0:2:2-0,0,3,0:0,1,3,0",
+    1: "(0,0)0:1:2:2:2:1|(0,1)1:2:2:2:1:0-0,0,0,0:0,0,5,1:0,1,5,0:0,1,4,1",
+    2: "(0,0)2:2:2:0:2:2|(0,1)2:0:2:2:2:0-0,1,1,0:0,1,5,0",
+    3: "(0,0)0:1:2:2:2:1|(0,1)1:0:2:2:2:0-0,0,1,1:0,0,5,1:0,1,1,0:0,1,5,0",
+    4: "(0,0)2:2:0:0:0:2|(0,1)2:0:2:2:2:0-0,1,1,0:0,1,5,0",
+    5: "(0,0)0:1:2:0:2:1|(0,1)1:0:2:1:2:0-0,0,1,1:0,0,5,1:0,1,1,0:0,1,5,0",
+};
+
 let globalParams = {
     width: window.innerWidth,
     height: window.innerHeight,
@@ -36,7 +45,7 @@ let globalParams = {
     gridHeight: 4,
     sideGeneration: "random",//be nice to store function directly here but doesn't play nice with dat-gui,
     dashBoardWidth: window.innerWidth/10,
-    presetLevels: "(0,0)2:2:0:0:1:0|(0,1)0:0:0:2:2:0|(0,2)0:2:2:0:0:1|(0,3)0:0:1:2:0:1|(1,0)2:0:0:0:0:1|(1,1)2:1:2:1:0:2|(1,2)2:1:0:1:1:0|(1,3)0:2:0:0:2:0|(2,0)2:0:0:1:0:2|(2,1)1:0:0:1:2:0|(2,2)2:2:0:2:2:0|(2,3)1:2:0:2:0:2|(3,0)1:2:2:2:0:0|(3,1)1:2:1:0:0:1|(3,2)1:0:0:1:1:0|(3,3)2:0:1:2:0:1|(4,0)0:0:1:0:2:0|(4,1)0:0:1:1:1:0|(4,2)0:2:1:1:0:1|(4,3)0:0:2:0:1:2-0,3,4,0:0,1,1,0:3,0,5,0:2,0,2,0:2,2,5,0:4,1,1,0:1,3,3,0:0,2,3,0:3,2,5,0:3,3,1,0:3,1,3,0"
+    presetLevels: levels
 };
 
 function globalSettingsGui(settingsGui, game){
@@ -57,10 +66,6 @@ function globalSettingsGui(settingsGui, game){
         game.boardView.destroy();
         createBoard(game);
     });
-    let levels = {
-        0: "(0,0)2:2:2:2:2:2|(0,1)2:2:2:2:2:2-0,0,3,0:0,1,3,0",
-        1: "(0,0)2:2:0:0:1:0|(0,1)0:0:0:2:2:0|(0,2)0:2:2:0:0:1|(0,3)0:0:1:2:0:1|(1,0)2:0:0:0:0:1|(1,1)2:1:2:1:0:2|(1,2)2:1:0:1:1:0|(1,3)0:2:0:0:2:0|(2,0)2:0:0:1:0:2|(2,1)1:0:0:1:2:0|(2,2)2:2:0:2:2:0|(2,3)1:2:0:2:0:2|(3,0)1:2:2:2:0:0|(3,1)1:2:1:0:0:1|(3,2)1:0:0:1:1:0|(3,3)2:0:1:2:0:1|(4,0)0:0:1:0:2:0|(4,1)0:0:1:1:1:0|(4,2)0:2:1:1:0:1|(4,3)0:0:2:0:1:2-0,3,4,0"
-    };
     mapFolder.add(globalParams, 'presetLevels', levels).listen().onFinishChange(function(newDataString){
         game.boardView.destroy();
         createBoard(game, newDataString);
@@ -76,7 +81,7 @@ function onCreate(game) {
     game.stage.backgroundColor = "#666666";//consider grey because less contrast
     let settingsGui = new dat.GUI();
     game.settingsGui = settingsGui;
-    createBoard(game);
+    createBoard(game, levels[0]);
     combinedSideGameSettingsGui(settingsGui);
     globalSettingsGui(settingsGui, game);
     boardSettingsGui(settingsGui, game);

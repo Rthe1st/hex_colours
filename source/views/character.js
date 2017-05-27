@@ -80,15 +80,14 @@ export class Character extends Phaser.Sprite{
 
     update(){
         this.refreshPosition();
-        let externalTangentAngle = 60;
-        //this.interpolationAngle = externalTangentAngle*(this.interpolation/this.maxInterpolation);
-        this.data.graphics.angle = externalTangentAngle*this.data.model.cords.side;
         this.data.graphics.clear();
         //now drawing
         //cause this doesnt change, we should cache bro
         this.data.graphics.lineStyle(2, '#ffffff');
-        this.data.graphics.beginFill(this.data.model.team.colour);
-        this.data.graphics.drawCircle(0, 0, this.data.boardView.outerSideLength/10);
+        this.data.graphics.beginFill(this.data.model.team.colour, 0.5);
+        //this and alpha are temp hacks to show overlaping characters of different colours
+        let teamScale = 1 + 0.5*this.data.model.team.number;
+        this.data.graphics.drawCircle(0, 0, this.data.boardView.outerSideLength*teamScale/10);
         this.data.graphics.endFill();
         this.data.graphics.lineStyle(5, 0x00000);
         //always point inwards because inner hex always has a matching side

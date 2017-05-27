@@ -11,7 +11,7 @@ export let teams = [
     },
     {
         number: 1,
-        colour: 0x666666,//0xebff00,
+        colour: 0xebff00,
         movesLeft: settings.standardMoveLimit,
         score: 0
     },
