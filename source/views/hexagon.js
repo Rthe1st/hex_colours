@@ -49,6 +49,7 @@ export class Hexagon extends Phaser.Sprite{
         this.data.text.fontSize = 8;
         //look at adding this to a group/image class with the graphics object
         this.addChild(this.data.text);
+        this.chooseRotationIcon(game);
     }
 
     /*destroy(){
@@ -57,6 +58,23 @@ export class Hexagon extends Phaser.Sprite{
         //super.destroy();
         boardModel.hexagons.get(hexModel.x).delete(hexModel.y);
     }*/
+
+    chooseRotationIcon(game){
+        let rotation_icon;
+        if(this.data.model.rotation == 'left'){
+            rotation_icon = 'left_rotate';
+        }else if(this.data.model.rotation == 'right'){
+            rotation_icon = 'right_rotate';
+        }else if(this.data.model.rotation == 'both'){
+            return;
+        }else{
+            console.log("model has invlaid roation setting");
+            return;
+        }
+        let rotation_sprite = new Phaser.Sprite(game, 0, 0, rotation_icon);//changing x and y by absoulutes is horrible, stop that
+        rotation_sprite.scale.setTo(0.5, 0.5);
+        this.addChild(rotation_sprite);
+    }
 
     refreshPositon(){
         let worldCords = this.data.boardView.calculateWorldCords(this.data.model.gridCords);

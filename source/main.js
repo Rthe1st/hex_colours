@@ -77,6 +77,11 @@ function globalSettingsGui(settingsGui, game){
     });
 }
 
+function preload(game){
+    game.load.image('left_rotate', '../../build/graphics/left_rotation.png');
+    game.load.image('right_rotate', '../../build/graphics/right_rotation.png');
+}
+
 function onCreate(game) {
     game.stage.backgroundColor = "#666666";//consider grey because less contrast
     let settingsGui = new dat.GUI();
@@ -94,5 +99,9 @@ function onCreate(game) {
 }
 function update(game){}
 window.onload = function() {
-	let game = new Phaser.Game(globalParams.width, globalParams.height, Phaser.CANVAS, "phaser_parent", {create: onCreate, update: update});
+	let game = new Phaser.Game(globalParams.width, globalParams.height, Phaser.CANVAS, "phaser_parent", {
+        preload: preload,
+        create: onCreate,
+        update: update
+    });
 };

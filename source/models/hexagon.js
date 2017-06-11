@@ -12,6 +12,16 @@ export class Hexagon{
                 this.sides.push(new SingleSide(this.team, this, board));
             }
         }else{
+            let rotationInfo = sideInfo[0];
+            if(rotationInfo == "L"){
+                this.rotation = "left";
+                sideInfo = sideInfo.substring(1);
+            }else if(rotationInfo == "R"){
+                sideInfo = sideInfo.substring(1);
+                this.rotation = "right";
+            }else{
+                this.rotation = "both";
+            }
             for(let side of sideInfo.split(":")){
                 let team = teams[side];
                 this.sides.push(new SingleSide(team, this, board));
@@ -49,15 +59,30 @@ export class Hexagon{
         if(this.isHome){
             return "!" + this.team.number;
         }else{
+            let rotationInfo;
+            if(this.rotation == "left"){
+                rotationInfo = "L";
+            }else if(this.rotation == "right"){
+                rotationInfo = "R";
+            }else{
+                rotationInfo = "";
+            }
             let sides = [];
             for(let side of this.sides){
                 sides.push(side.asString);
             }
-            return sides.join(":");
+            return rotationInfo + sides.join(":");
         }
     }
 
     rotate(amount){
+        if(this.rotation == "left" && amount > 0){
+            console.log("tired rotating wrong way");
+            return;
+        }else if(this.rotation == "right" && amount < 0){
+            console.log("tired rotating wrong way");
+            return;
+        }
         amount = amount % 6;
         //for anti-clockwise
         if(amount < 0){

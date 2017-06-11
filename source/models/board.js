@@ -229,10 +229,18 @@ export class Board{
             //clickedHexagon.destroy();
         }else{
             teamInfo.makeMove();
-            let rotationAmt = 1;
-            //using ctrlKey instead has a bug in phaser 2.6.2 https://github.com/photonstorm/phaser/issues/2167
-            if(pointer.leftButton.altKey){
-                rotationAmt *= -1;
+            let rotationAmt
+            if(clickedHexagon.data.model.rotation === "right"){
+                rotationAmt = 1;
+            }else if(clickedHexagon.data.model.rotation === "left"){
+                rotationAmt = -1;
+            }else if(clickedHexagon.data.model.rotation ==="both"){
+                //using ctrlKey instead has a bug in phaser 2.6.2 https://github.com/photonstorm/phaser/issues/2167
+                if(pointer.leftButton.altKey){
+                    rotationAmt = -1;
+                }else{
+                    rotationAmt = 1;
+                }
             }
             clickedHexagon.data.model.rotate(rotationAmt);
             if(teamInfo.endOfRound()){

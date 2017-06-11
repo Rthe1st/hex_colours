@@ -17,6 +17,11 @@ gulp.task('clientScripts', ['clean'], function(){
     .pipe(gulp.dest(buildDir));
 });
 
+gulp.task('graphics', ['clean'], function(){
+    gulp.src(["graphics/**/*.png"])
+    .pipe(gulp.dest('build/graphics'));
+});
+
 gulp.task('ava', () =>
     gulp.src('./tests')
         .pipe(ava())
@@ -24,10 +29,11 @@ gulp.task('ava', () =>
 
 //'callback' is apparently a hack to make sure the function finishes before returning?
 gulp.task('clean', function (callback) {
-    del([buildDir + '/*'], callback);
+    del([buildDir + '/**/*'], callback);
 });
 
 //default
 gulp.task('default', ['ava'], function () {
     gulp.start('clientScripts');
+    gulp.start('graphics');
 });
