@@ -49,6 +49,10 @@ let globalParams = {
 };
 
 function globalSettingsGui(settingsGui, game){
+    settingsGui.add(globalParams, 'presetLevels', levels).listen().onFinishChange(function(newDataString){
+        game.boardView.destroy();
+        createBoard(game, newDataString);
+    });
     let graphicsFolder = settingsGui.addFolder('main graphics');
     graphicsFolder.addColor(game.stage, 'backgroundColor');
     graphicsFolder.add(globalParams, 'width', 0, window.innerWidth).onFinishChange(function(newWidth){
@@ -66,10 +70,6 @@ function globalSettingsGui(settingsGui, game){
         game.boardView.destroy();
         createBoard(game);
     });
-    mapFolder.add(globalParams, 'presetLevels', levels).listen().onFinishChange(function(newDataString){
-        game.boardView.destroy();
-        createBoard(game, newDataString);
-    });
     //this cant point to board.dataString because dat-gui doesn't work with getters/setters
     mapFolder.add(globalParams, 'dataString').listen().onFinishChange(function(newDataString){
         game.boardView.destroy();
@@ -77,13 +77,18 @@ function globalSettingsGui(settingsGui, game){
     });
 }
 
+function preload(game){
+    game.load.image('left_rotate', '../../build/graphics/left_rotation.png');
+    game.load.image('right_rotate', '../../build/graphics/right_rotation.png');
+}
+
 function onCreate(game) {
     game.stage.backgroundColor = "#666666";//consider grey because less contrast
     let settingsGui = new dat.GUI();
     game.settingsGui = settingsGui;
     createBoard(game, levels[0]);
-    combinedSideGameSettingsGui(settingsGui);
     globalSettingsGui(settingsGui, game);
+    combinedSideGameSettingsGui(settingsGui);
     boardSettingsGui(settingsGui, game);
     hexagonSettingsGui(settingsGui);
     combinedSideSettingsGui(settingsGui);
@@ -94,5 +99,9 @@ function onCreate(game) {
 }
 function update(game){}
 window.onload = function() {
-	let game = new Phaser.Game(globalParams.width, globalParams.height, Phaser.CANVAS, "phaser_parent", {create: onCreate, update: update});
+	let game = new Phaser.Game(globalParams.width, globalParams.height, Phaser.CANVAS, "phaser_parent", {
+        preload: preload,
+        create: onCreate,
+        update: update
+    });
 };
