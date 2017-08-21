@@ -49,6 +49,10 @@ let globalParams = {
 };
 
 function globalSettingsGui(settingsGui, game){
+    settingsGui.add(globalParams, 'presetLevels', levels).listen().onFinishChange(function(newDataString){
+        game.boardView.destroy();
+        createBoard(game, newDataString);
+    });
     let graphicsFolder = settingsGui.addFolder('main graphics');
     graphicsFolder.addColor(game.stage, 'backgroundColor');
     graphicsFolder.add(globalParams, 'width', 0, window.innerWidth).onFinishChange(function(newWidth){
@@ -65,10 +69,6 @@ function globalSettingsGui(settingsGui, game){
     mapFolder.add(globalParams, 'sideGeneration', ["random", "even", "evenRandom", "dataString"]).listen().onFinishChange(function(genMethod){
         game.boardView.destroy();
         createBoard(game);
-    });
-    mapFolder.add(globalParams, 'presetLevels', levels).listen().onFinishChange(function(newDataString){
-        game.boardView.destroy();
-        createBoard(game, newDataString);
     });
     //this cant point to board.dataString because dat-gui doesn't work with getters/setters
     mapFolder.add(globalParams, 'dataString').listen().onFinishChange(function(newDataString){
@@ -87,8 +87,8 @@ function onCreate(game) {
     let settingsGui = new dat.GUI();
     game.settingsGui = settingsGui;
     createBoard(game, levels[0]);
-    combinedSideGameSettingsGui(settingsGui);
     globalSettingsGui(settingsGui, game);
+    combinedSideGameSettingsGui(settingsGui);
     boardSettingsGui(settingsGui, game);
     hexagonSettingsGui(settingsGui);
     combinedSideSettingsGui(settingsGui);

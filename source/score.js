@@ -6,7 +6,8 @@ let scoreSettings = {
 };
 
 export function scoreSettingsGui(gui){
-    gui.add(scoreSettings, 'perSideIncrease', 0, 20).step(1);
+    let scoreFolder = gui.addFolder('scoring');
+    scoreFolder.add(scoreSettings, 'perSideIncrease', 0, 20).step(1);
 }
 
 class ConnectionSet{

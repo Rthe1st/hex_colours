@@ -11,8 +11,9 @@ let settings = {
 };
 
 export function boardModelSettingsGui(gui){
-    gui.add(settings, 'mode', ['home', 'normal']);
-    gui.add(settings, 'mapEdit');
+    let boardFolder = gui.addFolder('board');
+    boardFolder.add(settings, 'mode', ['home', 'normal']);
+    boardFolder.add(settings, 'mapEdit');
 }
 
 export class Board{
